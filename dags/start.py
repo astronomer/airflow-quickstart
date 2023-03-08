@@ -27,15 +27,13 @@ from include.global_variables import airflow_conf_variables as gv
     catchup=False,
     default_args=gv.default_args,
     description="Run this DAG to kick off the pipeline!",
-    tags=["start"]
+    tags=["start"],
 )
 def start():
 
     # empty task which produces to the "start" Dataset to kick off the pipeline
-    start_task = EmptyOperator(
-        task_id="start",
-        outlets=[gv.DS_START]
-    )
+    # both the in_weather and in_climate DAGs are schedule to run on this Dataset
+    start_task = EmptyOperator(task_id="start", outlets=[gv.DS_START])
 
     start_task
 
