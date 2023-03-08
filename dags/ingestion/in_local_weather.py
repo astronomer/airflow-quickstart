@@ -20,6 +20,7 @@ import json
 from include.global_variables import airflow_conf_variables as gv
 from include.global_variables import user_input_variables as uv
 from include.custom_task_groups.create_bucket import CreateBucket
+from include.custom_operators.minio import LocalFilesystemToMinIOOperator
 
 # --- #
 # DAG #
@@ -33,7 +34,8 @@ from include.custom_task_groups.create_bucket import CreateBucket
     catchup=False,
     default_args=gv.default_args,
     description="Queries and ingests local weather data from an API to MinIO.",
-    tags=["ingestion", "minio"]
+    tags=["ingestion", "minio"],
+    render_template_as_native_obj=True
 )
 def in_local_weather():
 
@@ -127,38 +129,20 @@ def in_local_weather():
             "current_weather": current_weather,
             "API_response": r.status_code
         }
-
-    @task(
-        outlets=[gv.DS_WEATHER_DATA_MINIO]
+    
+    write_current_weather_to_minio = LocalFilesystemToMinIOOperator(
+        task_id="write_current_weather_to_minio",
+        minio_ip=gv.MINIO_IP,
+        bucket_name=gv.WEATHER_BUCKET_NAME,
+        object_name="test.json",
+        json_serializeable_information="{{ti.xcom_pull(task_ids='get_current_weather')}}"
     )
-    def write_current_weather_to_minio(weather_data):
-        """Write the current weather in the specified city to MinIO."""
 
-        # retrieve city name and timestamp from provided argument
-        city = weather_data["city"]
-        timestamp = weather_data["current_weather"]["time"]
-
-        client = gv.get_minio_client()
-        key = f"{city}/{timestamp}_{city}_weather.json"
-        bytes_to_write = io.BytesIO(bytes(json.dumps(weather_data), 'utf-8'))
-
-        # write bytes to MinIO
-        client.put_object(
-            gv.WEATHER_BUCKET_NAME,
-            key,
-            bytes_to_write,
-            -1,  # -1 = unknown filesize
-            part_size=10*1024*1024,
-        )
-
-        gv.task_log.info(f"Wrote weather in {city} at {timestamp} to MinIO.")
-
-        return weather_data
 
     # set dependencies
     coordinates = get_lat_long_for_city(uv.MY_CITY)
     current_weather = get_current_weather(coordinates)
-    create_bucket_tg >> write_current_weather_to_minio(current_weather)
+    create_bucket_tg >> current_weather >>  write_current_weather_to_minio
 
 
 in_local_weather()

@@ -13,7 +13,7 @@ from pendulum import datetime
 
 from include.global_variables import airflow_conf_variables as gv
 from include.custom_task_groups.create_bucket import CreateBucket
-from include.custom_operators.minio import LocalCSVToMinIOOperator
+from include.custom_operators.minio import LocalFilesystemToMinIOOperator
 
 # --- #
 # DAG #
@@ -38,25 +38,25 @@ def in_climate_data():
 
     # dynamically map over the custom LocalCSVToMinIOOperator to read the contents
     # of 2 local csv files to MinIO
-    testing_minio_op = LocalCSVToMinIOOperator.partial(
+    ingest_climate_data = LocalFilesystemToMinIOOperator.partial(
         task_id="ingest_climate_data",
         minio_ip=gv.MINIO_IP,
         bucket_name=gv.CLIMATE_BUCKET_NAME,
     ).expand_kwargs(
         [
             {
-                "csv_path": gv.TEMP_COUNTRY_PATH,
+                "local_file_path": gv.TEMP_COUNTRY_PATH,
                 "object_name": gv.TEMP_COUNTRY_PATH.split("/")[-1],
             },
             {
-                "csv_path": gv.TEMP_GLOBAL_PATH,
+                "local_file_path": gv.TEMP_GLOBAL_PATH,
                 "object_name": gv.TEMP_GLOBAL_PATH.split("/")[-1],
             },
         ]
     )
 
     # set dependencies
-    create_bucket_tg >> testing_minio_op
+    create_bucket_tg >> ingest_climate_data
 
 
 in_climate_data()
