@@ -1,5 +1,5 @@
 .git
-.DS_Store # macOS specific ignore
+**/.DS_Store # macOS specific ignore
 include/.DS_Store # macOS specific ignore
 airflow_settings.yaml
 astro
@@ -7,4 +7,4 @@ __pycache__
 include/minio
 DEBUG.py
 include/dwh
-dags/TOOL_TEST_DAG.py
+**/TOOL_TEST_DAG.py
