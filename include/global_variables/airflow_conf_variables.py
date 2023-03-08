@@ -9,14 +9,6 @@ from minio import Minio
 from pendulum import duration
 import json
 
-# -------------------- #
-# Enter your own info! #
-# -------------------- #
-
-MY_NAME = "Jani"
-MY_CITY = "Bern"
-MY_COUNTRY = "Switzerland"
-
 # ----------------------- #
 # Configuration variables #
 # ----------------------- #
@@ -54,7 +46,7 @@ task_log = logging.getLogger('airflow.task')
 
 # DAG default arguments
 default_args = {
-    'owner': MY_NAME,
+    'owner': 'airflow',
     'depends_on_past': False,
     'retries': 2,
     'retry_delay': duration(minutes=5)

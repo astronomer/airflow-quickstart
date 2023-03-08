@@ -16,7 +16,8 @@ from astro.sql.table import Table
 # Local module imports #
 # -------------------- #
 
-from include.global_variables import global_variables as gv
+from include.global_variables import airflow_conf_variables as gv
+from include.global_variables import user_input_variables as uv
 
 # ----------------- #
 # Astro SDK Queries #
@@ -69,7 +70,7 @@ def create_reporting_table():
 
         return table_name_clean
 
-    target_table = create_country_table(gv.MY_COUNTRY)
+    target_table = create_country_table(uv.MY_COUNTRY)
 
     # run the query in query_climate_data on the country climate table
     tmp_temp_countries_table = query_climate_data(
@@ -77,7 +78,7 @@ def create_reporting_table():
             conn_id="duckdb_default",
             name=gv.COUNTRY_CLIMATE_TABLE_NAME
         ),
-        country=f"{gv.MY_COUNTRY}"
+        country=f"{uv.MY_COUNTRY}"
     )
 
     # append the result from the above query to the existing country table

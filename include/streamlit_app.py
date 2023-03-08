@@ -9,17 +9,21 @@ import os
 from datetime import datetime
 import altair as alt
 import json
+import global_variables.user_input_variables as user_var
 
 # --------- #
 # VARIABLES #
 # --------- #
 
-country_name = os.environ["my_country"]
-city_name = os.environ["my_city"]
-city_coordinates = json.loads(os.environ["city_coordinates"])
+country_name = user_var.MY_COUNTRY
+city_name = user_var.MY_CITY
+
+with open("include/coordinates.json", "r") as f:
+    city_coordinates = json.load(f)
+
 city_lat = city_coordinates["lat"]
 city_long = city_coordinates["long"]
-user_name = os.environ["my_name"]
+user_name = user_var.MY_NAME
 
 duck_db_instance_name = "dwh"  # when changing this value also change the db name in .env
 global_temp_col = "Global"
@@ -37,7 +41,7 @@ month_grain_col_name = "Average Surface Temperature per Month"
 
 
 # retrieving data
-def get_data(country, city, db=f"/usr/local/airflow/{duck_db_instance_name}"):
+def get_data(country, city, db=f"include/{duck_db_instance_name}"):
     """Function to query a local DuckDB instance for climate and
     weather data processed through the data pipeline."""
 

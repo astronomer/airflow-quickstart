@@ -10,7 +10,7 @@ from airflow.decorators import task
 # Local module imports #
 # -------------------- #
 
-from include.global_variables import global_variables as gv
+from include.global_variables import airflow_conf_variables as gv
 
 # --------------- #
 # TaskGroup class #

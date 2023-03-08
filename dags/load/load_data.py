@@ -16,7 +16,8 @@ from minio.deleteobjects import DeleteObject
 # Local module imports #
 # -------------------- #
 
-from include.global_variables import global_variables as gv
+from include.global_variables import airflow_conf_variables as gv
+from include.global_variables import user_input_variables as uv
 from include.custom_task_groups.create_bucket import CreateBucket
 
 # --- #
@@ -222,10 +223,10 @@ def load_data():
 
     # set dependencies
     list_objects_climate = list_files_climate_bucket()
-    list_objects_weather = list_files_weather_bucket(gv.MY_CITY)
+    list_objects_weather = list_files_weather_bucket(uv.MY_CITY)
 
     climate_data = load_climate_data.expand(obj=list_objects_climate)
-    weather_data = load_weather_data.partial(city=gv.MY_CITY).expand(
+    weather_data = load_weather_data.partial(city=uv.MY_CITY).expand(
         obj=list_objects_weather
     )
 

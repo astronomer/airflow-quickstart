@@ -55,15 +55,11 @@ Download the [Astro CLI](https://docs.astronomer.io/astro/cli/install-cli) to ru
 
     ![Dataset and DAG Dependencies](src/dataset_dag_dependency.png)
 
-5. The last DAG in the pipeline `run_streamlit_app`, will stay in a running state as shown in the screenshot below.
-
-    ![DAGs view after first run](src/click_on_run_streamlit.png)
-
-6. Open the Streamlit app. If you are using codespaces go to the **Ports** tab and open the URL of the forwarded port `8501`. If you are running locally go to `localhost:8501`.
+5. Open the Streamlit app. If you are using codespaces go to the **Ports** tab and open the URL of the forwarded port `8501`. If you are running locally go to `localhost:8501`.
 
     ![Open Streamlit URL Codespaces](src/open_streamlit_codespaces.png)
 
-7. View the Streamlit app.
+6. View the Streamlit app.
 
     ![Streamlit app](src/streamlit_app.png)
 
@@ -132,12 +128,6 @@ This DAG will first retrieve lists of objects in the MinIO weather and climate b
 ![create_reporting_table DAG](src/create_reporting_table.png)
 
 This DAG uses another Astronomer Open Source project, the [Astro SDK](https://astro-sdk-python.readthedocs.io/en/stable/index.html) to run a transformation statement on data in DuckDB. The result from this transformation statement which selects the records from the climate data pertinent to the country you specified as `MY_COUNTRY` are appended to a newly created reporting table. You can learn more about the Astro SDK in the [Write a DAG with the Astro Python SDK](https://docs.astronomer.io/learn/astro-python-sdk) tutorial. 
-
-#### run_streamlit_app
-
-![run_streamlit_app DAG](src/run_streamlit_app.png)
-
-The last DAG in the pipeline is special in that it will stay in a running state for you to be able to explore the local streamlit app until either you manually mark the DAG as successful or failed or a full hour has passed. The DAG uses the BashOperator to run the streamlit app located at `include/streamlit_app/weather_v_climate.py`. The app pulls information from the data that was loaded and transformed into DuckDB during this pipeline.
 
 #### TOOL_TEST_DAG
 

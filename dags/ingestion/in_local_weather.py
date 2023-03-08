@@ -17,7 +17,8 @@ import json
 # Local module imports #
 # -------------------- #
 
-from include.global_variables import global_variables as gv
+from include.global_variables import airflow_conf_variables as gv
+from include.global_variables import user_input_variables as uv
 from include.custom_task_groups.create_bucket import CreateBucket
 
 # --- #
@@ -70,12 +71,9 @@ def in_local_weather():
 
         city_coordinates = {"city": city, "lat": lat, "long": long}
 
-        # save the coordinates retrieved in an Airflow variable, which can be
-        # accessed from within other DAGs
-        Variable.set(
-            key="city_coordinates",
-            value=json.dumps(city_coordinates)
-        )
+        # save the coordinates in the include folder to be access by the streamlit app
+        with open("include/coordinates.json", 'w') as f:
+            f.write(json.dumps(city_coordinates))
 
         return city_coordinates
 
@@ -158,7 +156,7 @@ def in_local_weather():
         return weather_data
 
     # set dependencies
-    coordinates = get_lat_long_for_city(gv.MY_CITY)
+    coordinates = get_lat_long_for_city(uv.MY_CITY)
     current_weather = get_current_weather(coordinates)
     create_bucket_tg >> write_current_weather_to_minio(current_weather)
 

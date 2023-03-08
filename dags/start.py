@@ -12,7 +12,7 @@ from pendulum import datetime
 # Local module imports #
 # -------------------- #
 
-from include.global_variables import global_variables as gv
+from include.global_variables import airflow_conf_variables as gv
 
 # --- #
 # DAG #
