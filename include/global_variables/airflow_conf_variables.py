@@ -22,10 +22,8 @@ CLIMATE_BUCKET_NAME = "climate"
 ARCHIVE_BUCKET_NAME = "archive"
 
 # Source files climate data
-CLIMATE_DATA_SOURCES = [
-    f"{os.environ['AIRFLOW_HOME']}/include/climate_data/temp_country.csv",
-    f"{os.environ['AIRFLOW_HOME']}/include/climate_data/temp_global.csv"
-]
+TEMP_COUNTRY_PATH = f"{os.environ['AIRFLOW_HOME']}/include/climate_data/temp_country.csv"
+TEMP_GLOBAL_PATH = f"{os.environ['AIRFLOW_HOME']}/include/climate_data/temp_global.csv"
 
 # Datasets
 DS_CLIMATE_DATA_MINIO = Dataset(f"minio://{CLIMATE_BUCKET_NAME}")
