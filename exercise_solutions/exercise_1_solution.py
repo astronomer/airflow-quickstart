@@ -26,11 +26,11 @@ list_of_websites = ["https://www.astronomer.io/", "https://min.io/"]
     catchup=False,
     default_args=gv.default_args,
     description="",
-    tags=["exercise", "ingestion", "minio"],
+    tags=["solution", "ingestion", "minio"],
     # render Jinja templates as native objects (e.g. dictionary) instead of strings
     render_template_as_native_obj=True,
 )
-def exercise_1():
+def exercise_1_solution():
 
     # create an instance of the CreateBucket task group consisting of 5 tasks
     create_bucket_tg = CreateBucket(
@@ -50,7 +50,7 @@ def exercise_1():
     # websites in 'list_of_websites'
     # Hint: you will need to use `.expand()`
 
-    website_footprint_info = get_website_footprint(website=list_of_websites[0])
+    website_footprint_info = get_website_footprint.expand(website=list_of_websites)
 
 
     # ---------------- #
@@ -60,14 +60,15 @@ def exercise_1():
     # to write the information from each of the tested websites to MinIO
     # Hint: you will need to add both `.partial` and `.expand` in the right places
 
-    write_to_minio = LocalFilesystemToMinIOOperator(
+    write_to_minio = LocalFilesystemToMinIOOperator.partial(
         task_id="write_to_minio",
         bucket_name=gv.WEBSITE_FOOTPRINT_BUCKET_NAME,
         object_name=f"website_footprint_{uuid.uuid4()}.json",
+    ).expand(
         json_serializeable_information=website_footprint_info,
     )
 
     create_bucket_tg >> website_footprint_info >> write_to_minio
 
 
-exercise_1()
+exercise_1_solution()

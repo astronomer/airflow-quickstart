@@ -65,7 +65,6 @@ def in_local_weather():
     # write the weather information to MinIO
     write_current_weather_to_minio = LocalFilesystemToMinIOOperator(
         task_id="write_current_weather_to_minio",
-        minio_ip=gv.MINIO_IP,
         bucket_name=gv.WEATHER_BUCKET_NAME,
         object_name=f"{uv.MY_CITY}.json",
         # pull the dictionary containing the information from XCom using a Jinja template

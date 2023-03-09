@@ -40,7 +40,6 @@ def in_climate_data():
     # of 2 local csv files to MinIO
     ingest_climate_data = LocalFilesystemToMinIOOperator.partial(
         task_id="ingest_climate_data",
-        minio_ip=gv.MINIO_IP,
         bucket_name=gv.CLIMATE_BUCKET_NAME,
         outlets=[gv.DS_CLIMATE_DATA_MINIO]
     ).expand_kwargs(

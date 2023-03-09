@@ -9,18 +9,18 @@ import json
 class MinIOHook(BaseHook):
     """
     Interact with MinIO.
-    :param minio_ip: IP Address of the MinIO instance
-    :param minio_access_key: MinIO Access Key (default: minioadmin)
-    :param minio_secret_key: MinIO Secret Key (default: minioadmin)
-    :param secure_connection: toggle connection security (default:false)
+    :param minio_conn_id: ID of MinIO connection. (default: minio_default)
     """
+
+    conn_name_attr = "minio_conn_id"
+    default_conn_name = "minio_default"
+    conn_type = "general"
+    hook_name = "MinIOHook"
 
     # define the .__init__() method that runs when the DAG is parsed
     def __init__(
         self,
-        minio_ip,
-        minio_access_key="minioadmin",
-        minio_secret_key="minioadmin",
+        minio_conn_id: str = "minio_default",
         secure_connection=False,
         *args,
         **kwargs,
@@ -28,9 +28,7 @@ class MinIOHook(BaseHook):
         # initialize the parent hook
         super().__init__(*args, **kwargs)
         # assign class variables
-        self.minio_ip = minio_ip
-        self.minio_access_key = minio_access_key
-        self.minio_secret_key = minio_secret_key
+        self.minio_conn_id = minio_conn_id
         self.secure_connection = secure_connection
         # call the '.get_conn()' method upon initialization
         self.get_conn()
@@ -38,10 +36,14 @@ class MinIOHook(BaseHook):
     def get_conn(self):
         """Function that initiates a new connection to MinIO."""
 
+        conn_id = getattr(self, self.conn_name_attr)
+        # get the connection object from the Airflow connection
+        conn = self.get_connection(conn_id)
+
         client = Minio(
-            self.minio_ip,
-            self.minio_access_key,
-            self.minio_secret_key,
+            conn.host,
+            conn.login,
+            conn.password,
             secure=self.secure_connection,
         )
 
@@ -65,15 +67,27 @@ class MinIOHook(BaseHook):
             part_size=part_size,
         )
 
+    def list_objects(self, bucket_name, prefix=""):
+        """
+        List objects in MinIO bucket.
+        :param bucket_name: Name of the bucket.
+        :param prefix: optional prefix of files to list.
+        """
+
+        client = self.get_conn()
+        list_of_objects = client.list_objects(bucket_name=bucket_name, prefix=prefix)
+        return list_of_objects
+
 
 class LocalFilesystemToMinIOOperator(BaseOperator):
     """
-    Simple example operator that logs one parameter and returns a string saying hi.
-    :param minio_ip: (required) IP address of the MinIO instance.
-    :param bucket_name: Name of the bucket.
-    :param object_name: Object name in the bucket (key).
+    Operator that writes content from a local json/csv file or directly
+    provided json serializeable information to MinIO.
+    :param bucket_name: (required) Name of the bucket.
+    :param object_name: (required) Object name in the bucket (key).
     :param local_file_path: Path to the local file that is uploaded to MinIO.
     :param json_serializeable_information: Alternatively to providing a filepath provide json-serializeable information.
+    :param minio_conn_id: connection id of the MinIO connection.
     :param data: An object having callable read() returning bytes object.
     :param length: Data size; (default: -1 for unknown size and set valid part_size).
     :param part_size: Multipart part size (default: 10*1024*1024).
@@ -85,6 +99,7 @@ class LocalFilesystemToMinIOOperator(BaseOperator):
         "object_name",
         "local_file_path",
         "json_serializeable_information",
+        "minio_conn_id",
         "length",
         "part_size",
     )
@@ -92,11 +107,11 @@ class LocalFilesystemToMinIOOperator(BaseOperator):
     # define the .__init__() method that runs when the DAG is parsed
     def __init__(
         self,
-        minio_ip,
         bucket_name,
         object_name,
         local_file_path=None,
         json_serializeable_information=None,
+        minio_conn_id: str = MinIOHook.default_conn_name,
         length=-1,
         part_size=10 * 1024 * 1024,
         *args,
@@ -105,11 +120,11 @@ class LocalFilesystemToMinIOOperator(BaseOperator):
         # initialize the parent operator
         super().__init__(*args, **kwargs)
         # assign class variables
-        self.minio_ip = minio_ip
         self.bucket_name = bucket_name
         self.object_name = object_name
         self.local_file_path = local_file_path
         self.json_serializeable_information = json_serializeable_information
+        self.minio_conn_id = minio_conn_id
         self.length = length
         self.part_size = part_size
 
@@ -142,7 +157,7 @@ class LocalFilesystemToMinIOOperator(BaseOperator):
                 bytes(json.dumps(self.json_serializeable_information), "utf-8")
             )
 
-        response = MinIOHook(self.minio_ip).put_object(
+        response = MinIOHook(self.minio_conn_id).put_object(
             bucket_name=self.bucket_name,
             object_name=self.object_name,
             data=data,
@@ -150,3 +165,34 @@ class LocalFilesystemToMinIOOperator(BaseOperator):
             part_size=self.part_size,
         )
         self.log.info(response)
+
+
+class MinIOListOperator(BaseOperator):
+    """
+    List all objects from the MinIO bucket with the given string prefix in name.
+    :param bucket_name: Name of the bucket.
+    :param prefix: optional prefix of files to list.
+    :param minio_conn_id: ID to minio connection.
+    """
+
+    def __init__(
+        self,
+        bucket_name,
+        prefix: str = "",
+        minio_conn_id: str = MinIOHook.default_conn_name,
+        *args,
+        **kwargs,
+    ):
+        # initialize the parent operator
+        super().__init__(*args, **kwargs)
+        # assign class variables
+        self.bucket_name = bucket_name
+        self.prefix = prefix
+        self.minio_conn_id = minio_conn_id
+
+    def execute(self, context):
+        list_of_objects = MinIOHook(self.minio_conn_id).list_objects(
+            self.bucket_name, self.prefix
+        )
+
+        return list_of_objects
