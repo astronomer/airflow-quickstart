@@ -95,7 +95,6 @@ def load_data():
         client = gv.get_minio_client()
         objects = client.list_objects(
             gv.WEATHER_BUCKET_NAME,
-            prefix=city + "/"
         )
         objects_list = [obj.object_name for obj in objects]
         gv.task_log.info(f"{gv.WEATHER_BUCKET_NAME} contains {objects_list}")
