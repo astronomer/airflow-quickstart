@@ -20,6 +20,7 @@ MINIO_IP = "host.docker.internal:9000"
 WEATHER_BUCKET_NAME = "weather"
 CLIMATE_BUCKET_NAME = "climate"
 ARCHIVE_BUCKET_NAME = "archive"
+WEBSITE_FOOTPRINT_BUCKET_NAME = "websitecarbon"
 
 # Source files climate data
 TEMP_COUNTRY_PATH = f"{os.environ['AIRFLOW_HOME']}/include/climate_data/temp_country.csv"
@@ -46,7 +47,7 @@ task_log = logging.getLogger('airflow.task')
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'retries': 2,
+    'retries': 1,
     'retry_delay': duration(minutes=5)
 }
 

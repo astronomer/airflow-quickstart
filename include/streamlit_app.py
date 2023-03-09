@@ -336,6 +336,9 @@ with st.sidebar:
             (<a href='https://creativecommons.org/licenses/by-nc-sa/4.0/'>CC BY-NC-SA 4.0</a>)
         </br>
         </br>
+            <a href=https://api.websitecarbon.com/#site-endpoint'> Website Carbon API </a>
+        </br>
+        </br>
         """,
         # warning: using html in your streamlit app can open you to security
         # risk when writing unsafe html code,
