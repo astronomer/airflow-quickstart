@@ -9,8 +9,6 @@ from pendulum import datetime, parse
 import duckdb
 import os
 import json
-from minio.commonconfig import CopySource
-from minio.deleteobjects import DeleteObject
 
 # -------------------- #
 # Local module imports #
