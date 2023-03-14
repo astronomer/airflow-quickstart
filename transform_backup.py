@@ -25,15 +25,27 @@ from include.global_variables import user_input_variables as uv
 
 
 @aql.transform()
-def query_climate_data(
-    temp_countries_table: Table,
-    country: str
-):
+def query_climate_data(temp_countries_table: Table, country: str):
     return """
         SELECT *
         FROM {{temp_countries_table}}
         WHERE Country = {{country}};
     """
+
+
+@aql.transform()
+def create_rolling_averages_global_temp(
+    temp_global: Table,
+):
+    return """
+        SELECT CAST(dt AS DATE) AS date, 
+        AVG(LandAverageTemperature) OVER(PARTITION BY YEAR(CAST(dt AS DATE))/10*10) AS decade_average_temp,
+        AVG(LandAverageTemperature) OVER(PARTITION BY YEAR(CAST(dt AS DATE))) AS year_average_temp,
+        AVG(LandAverageTemperature) OVER(PARTITION BY MONTH(CAST(dt AS DATE))) AS month_average_temp,
+        AVG(LandAverageTemperature) OVER(PARTITION BY CAST(dt AS DATE)) AS day_average_temp,
+        FROM temp_global
+    """
+
 
 # --- #
 # DAG #
@@ -47,10 +59,9 @@ def query_climate_data(
     catchup=False,
     default_args=gv.default_args,
     description="Runs a transformation on data in DuckDB using the Astro SDK.",
-    tags=["transform", "duckdb"]
+    tags=["transform", "duckdb"],
 )
-def create_reporting_table():
-
+def transform():
     @task
     def create_country_table(table_name):
         """Creates a new table for the country provided."""
@@ -75,17 +86,16 @@ def create_reporting_table():
     # run the query in query_climate_data on the country climate table
     tmp_temp_countries_table = query_climate_data(
         temp_countries_table=Table(
-            conn_id="duckdb_default",
-            name=gv.COUNTRY_CLIMATE_TABLE_NAME
+            conn_id="duckdb_default", name=gv.COUNTRY_CLIMATE_TABLE_NAME
         ),
-        country=f"{uv.MY_COUNTRY}"
+        country=f"{uv.MY_COUNTRY}",
     )
 
     # append the result from the above query to the existing country table
     aql.append(
         target_table=Table(conn_id="duckdb_default", name=f"{target_table}"),
         source_table=tmp_temp_countries_table,
-        outlets=[gv.DS_DUCKDB_REPORTING]
+        outlets=[gv.DS_DUCKDB_REPORTING],
     )
 
     # clean up temporary tables created
@@ -95,4 +105,4 @@ def create_reporting_table():
     target_table >> tmp_temp_countries_table
 
 
-create_reporting_table()
+transform()

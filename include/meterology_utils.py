@@ -1,7 +1,7 @@
 from geopy.geocoders import Nominatim
 from geopy.adapters import AdapterHTTPError
 import requests
-import json
+import pandas as pd
 from include.global_variables import airflow_conf_variables as gv
 
 
@@ -55,14 +55,31 @@ def get_current_weather_from_city_coordinates(coordinates, timestamp):
             )
         )
 
+        data = {
+            "city": city,
+            "lat": lat,
+            "long": long,
+            "temperature": current_weather["temperature"],
+            "windspeed": current_weather["windspeed"],
+            "winddirection": current_weather["winddirection"],
+            "weathercode": current_weather["weathercode"],
+            "time": f"{timestamp}",
+            "API_response": r.status_code,
+        }
+
     # if the API call is not successful, log a warning
     else:
-        current_weather = {
+
+        data = {
+            "city": city,
+            "lat": lat,
+            "long": long,
             "temperature": "NULL",
             "windspeed": "NULL",
             "winddirection": "NULL",
             "weathercode": "NULL",
             "time": f"{timestamp}",
+            "API_response": r.status_code,
         }
 
         gv.task_log.warn(
@@ -73,10 +90,46 @@ def get_current_weather_from_city_coordinates(coordinates, timestamp):
             """
         )
 
-    return {
-        "city": city,
-        "lat": lat,
-        "long": long,
-        "current_weather": current_weather,
-        "API_response": r.status_code,
-    }
+    return [data]
+
+
+def get_historical_weather_from_city_coordinates(coordinates):
+    """Queries an open weather API for the historical weather at the
+    coordinates provided."""
+
+    lat = coordinates["lat"]
+    long = coordinates["long"]
+    city = coordinates["city"]
+
+    r = requests.get(
+        f"https://archive-api.open-meteo.com/v1/archive?latitude={lat}&longitude={long}&start_date=1960-01-01&end_date=2023-01-01&daily=temperature_2m_max&timezone=auto"
+    )
+
+    # if the API call is successful log the current temp
+    if r.status_code == 200:
+        max_temp_per_day = pd.DataFrame(r.json()["daily"])
+        max_temp_per_day["city"] = city
+        max_temp_per_day["lat"] = lat
+        max_temp_per_day["long"] = long
+
+    else:
+
+        max_temp_per_day = pd.DataFrame(
+            {
+                "time": ["Null"],
+                "temperature_2m_max": ["Null"],
+                "city": [city],
+                "lat": [lat],
+                "long": [long],
+            }
+        )
+
+        gv.task_log.warn(
+            f"""
+                Could not retrieve historical temperature for {city} at
+                {lat}/{long} from https://api.open/meteo.com.
+                Request returned {r.status_code}.
+            """
+        )
+
+    return max_temp_per_day

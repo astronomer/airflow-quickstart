@@ -1,158 +1,115 @@
 # --------------- #
-# PACKAGE IMPORTS #
+# PACKAGE IMPORTS #
 # --------------- #
 
 import streamlit as st
 import duckdb
 import pandas as pd
 import os
-from datetime import datetime
+from datetime import date
 import altair as alt
 import json
-import global_variables.user_input_variables as user_var
+import global_variables.user_input_variables as uv
 
 # --------- #
 # VARIABLES #
 # --------- #
 
-country_name = user_var.MY_COUNTRY
-city_name = user_var.MY_CITY
+country_name = uv.MY_COUNTRY
+city_name = uv.MY_CITY
+user_name = uv.MY_NAME
 
-with open("include/coordinates.json", "r") as f:
-    city_coordinates = json.load(f)
 
-city_lat = city_coordinates["lat"]
-city_long = city_coordinates["long"]
-user_name = user_var.MY_NAME
-
-duck_db_instance_name = "dwh"  # when changing this value also change the db name in .env
+duck_db_instance_name = (
+    "dwh"  # when changing this value also change the db name in .env
+)
 global_temp_col = "Global"
 country_temp_col = country_name
 metric_col_name = "Average Surface Temperature"
-date_col_name = "Year"
-decade_grain_col_name = "Average Surface Temperature per Decade"
-year_grain_col_name = "Average Surface Temperature per Year"
-quarter_grain_col_name = "Average Surface Temperature per Quarter"
-month_grain_col_name = "Average Surface Temperature per Month"
+date_col_name = "date"
+decade_grain_col_name = "decade_average_temp"
+year_grain_col_name = "year_average_temp"
 
 # ------------ #
 # GETTING DATA #
 # ------------ #
 
 
-# retrieving data
-def get_data(country, city, db=f"include/{duck_db_instance_name}"):
-    """Function to query a local DuckDB instance for climate and
-    weather data processed through the data pipeline."""
+def get_current_weather_info_by_city(city, db=f"include/{duck_db_instance_name}"):
+    cursor = duckdb.connect(db)
+    row = cursor.execute(
+        f"""SELECT lat, long, temperature, windspeed, winddirection, api_response
+        FROM in_current_weather
+        WHERE city == '{city}' ORDER BY time DESC LIMIT 1;"""
+    ).fetchall()
+    cursor.close()
+    return row[0]
 
-    # replace spaces in country names
-    country_name_no_space = country.replace(" ", "_")
 
-    # Query duckdb database `dwh`
+(
+    my_city_lat,
+    my_city_long,
+    my_city_current_temp,
+    my_city_current_windspeed,
+    my_city_current_winddirection,
+    my_city_api_response,
+) = get_current_weather_info_by_city(city_name)
+
+
+def get_global_surface_temp_data(
+    date_col_name, global_temp_col, db=f"include/{duck_db_instance_name}"
+):
+
     cursor = duckdb.connect(db)
 
     # get global surface temperature data
-    global_data = cursor.execute(
-        f"""SELECT dt AS {date_col_name}, LandAverageTemperature AS '{global_temp_col}'
-        FROM temp_global_table;"""
+    global_surface_temp_data = cursor.execute(
+        f"""SELECT * 
+        FROM report_global_climate;"""
     ).fetchall()
-    # get country surface temperature data
-    country_data = cursor.execute(
-        f"""SELECT dt AS {date_col_name}, AverageTemperature AS '{country_temp_col}'
-        FROM {country_name_no_space} ORDER BY dt;"""
-    ).fetchall()
-    # get local weather data
-    city_data = cursor.execute(
-        f"""SELECT *
-        FROM in_weather
-        WHERE city == '{city}' ORDER BY TIMESTAMP LIMIT 1;"""
+
+    global_surface_temp_col_names = cursor.execute(
+        f"""SELECT column_name from information_schema.columns where table_name = 'report_global_climate'"""
     ).fetchall()
 
     cursor.close()
 
-    return global_data, country_data, city_data
+    df = pd.DataFrame(
+        global_surface_temp_data, columns=[x[0] for x in global_surface_temp_col_names]
+    )
+
+    return df
 
 
-global_data, country_data, city_data = get_data(country_name, city_name)
+global_temp_df = get_global_surface_temp_data(date_col_name, global_temp_col)
+global_temp_df["Scale"] = "Global"
 
-#----------------#
-# PREPARING DATA #
-#----------------#
 
-# prepare global climate data for plotting
-df_g = pd.DataFrame(
-    global_data,
-    columns=[
-        date_col_name,
-        global_temp_col
-    ]
-)
+def get_historic_weather_info_by_city(city, db=f"include/{duck_db_instance_name}"):
+    cursor = duckdb.connect(db)
+    historical_weather_data = cursor.execute(
+        f"""SELECT *
+        FROM report_historical_weather
+        WHERE city == '{city}' ORDER BY time DESC;"""
+    ).fetchall()
 
-# ensure correct datetime format
-df_g[date_col_name] = pd.to_datetime(df_g[date_col_name])
+    historical_weather_col_names = cursor.execute(
+        f"""SELECT column_name from information_schema.columns where table_name = 'report_historical_weather'"""
+    ).fetchall()
 
-# prepare country climate data for plotting
-df_c = pd.DataFrame(
-    country_data,
-    columns=[
-        date_col_name,
-        country_temp_col
-    ]
-)
+    df = pd.DataFrame(
+        historical_weather_data, columns=[x[0] for x in historical_weather_col_names]
+    )
+    cursor.close()
+    return df
 
-# ensure correct datetime format
-df_c[date_col_name] = pd.to_datetime(df_c[date_col_name])
+my_city_historical_weather_data = get_historic_weather_info_by_city(city_name)
 
-# combine dataframes for plotting
-df = df_g
-df[country_temp_col] = df_c[country_temp_col]
 
-# melt data
-df_molten = df[[date_col_name, country_temp_col, global_temp_col]].melt(
-    id_vars=[date_col_name],
-    var_name='Scale',
-    value_name=metric_col_name,
-    ignore_index=True
-)
 
-# average surface temperature over additional timespans
-df_molten["Decade"] = df_molten[date_col_name].dt.year // 10 * 10
-df_molten["Quarter"] = df_molten[date_col_name].dt.to_period("Q")
-df_molten["YearMonth"] = df_molten[date_col_name].dt.to_period("M")
-
-df_molten[decade_grain_col_name] = df_molten.groupby(
-    [df_molten["Decade"], df_molten["Scale"]]
-)[metric_col_name].transform('mean')
-
-df_molten[year_grain_col_name] = df_molten.groupby(
-    [df_molten[date_col_name].dt.year, df_molten["Scale"]]
-)[metric_col_name].transform('mean')
-
-df_molten[month_grain_col_name] = df_molten.groupby(
-    [df_molten["YearMonth"], df_molten["Scale"]]
-)[metric_col_name].transform('mean')
-
-df_molten[quarter_grain_col_name] = df_molten.groupby(
-    [df_molten["Quarter"], df_molten["Scale"]]
-)[metric_col_name].transform('mean')
-
-# prepare local weather data for plotting
-df_city = pd.DataFrame(
-    city_data,
-    columns=[
-        "city",
-        "api_response",
-        "dt",
-        "temperature",
-        "windspeed",
-        "winddirection",
-        "weathercode"
-    ]
-)
-
-#---------------#
+# ---------------#
 # STREAMLIT APP #
-#---------------#
+# ---------------#
 
 st.title("Global Climate and Local Weather")
 
@@ -165,45 +122,33 @@ st.subheader("Surface temperatures")
 ### Climate section
 
 # define columns
-col1, col2, col3 = st.columns([3, 1, 1])
+col1, col2= st.columns([3, 2])
 
 # col 1 contains the time-period slider
 with col1:
 
     # add slider
-    start_time = st.slider(
+    timespan = st.slider(
         "Adjust the time-period shown.",
-        value=(datetime(1760, 1, 1), datetime(2023, 1, 1)),
-        format="YYYY")
+        value=(date(1760, 1, 1), date(2023, 1, 1)),
+        format="YYYY",
+    )
 
-    # modify the plotted table according to slider input
-    df_melt_cut = df_molten[
-        (df_molten[date_col_name] >= start_time[0]) & (df_molten[date_col_name] <= start_time[1])
+    global_temp_df_timecut = global_temp_df[
+        (global_temp_df[date_col_name] >= timespan[0])
+        & (global_temp_df[date_col_name] <= timespan[1])
     ]
+
 
 # col 2 contains the check-boxes for global data and user-selected country
 with col2:
 
-    # add checkboxes
-    global_check = st.checkbox("Global", value=True)
-    country_check = st.checkbox(f"{country_name}", value=True)
-
-    # create a list of lines to show for plotting
-    lines_to_show = []
-    if global_check:
-        lines_to_show.append("Global")
-    if country_check:
-        lines_to_show.append(f"{country_name}")
-
-# col 3 contains the selection of grain to display
-with col3:
-
     # add selectbox for grain of data to display
     grain = st.selectbox(
         "Average temperatures per",
-        ("Decade", "Year", "Quarter", "Month"),
+        ("Decade", "Year", "Raw Data"),
         label_visibility="visible",
-        index=0
+        index=0,
     )
 
 
@@ -211,18 +156,13 @@ with col3:
 def get_chart(data, grain):
     """Function to return interactive chart."""
 
-    # only show selected Scales (global vs country vs neither or both)
-    data = data[data['Scale'].isin(lines_to_show)]
-
     # adjust grain based on selectbox input
     if grain == "Decade":
         y = decade_grain_col_name
     if grain == "Year":
         y = year_grain_col_name
-    if grain == "Quarter":
-        y = quarter_grain_col_name
-    if grain == "Month":
-        y = month_grain_col_name
+    if grain == "Raw Data":
+        y = "day_average_temp"
 
     # add display of data when hovering
     hover = alt.selection_single(
@@ -233,15 +173,7 @@ def get_chart(data, grain):
     )
 
     # add lines
-    lines = (
-        alt.Chart(data)
-        .mark_line()
-        .encode(
-            x=date_col_name,
-            y=y,
-            color="Scale"
-        )
-    )
+    lines = alt.Chart(data).mark_line().encode(x=date_col_name, y=y)
 
     # draw points on the line, and highlight based on selection
     points = lines.transform_filter(hover).mark_circle(size=65)
@@ -265,42 +197,42 @@ def get_chart(data, grain):
     return (lines + points + tooltips).interactive()
 
 
-chart = get_chart(df_melt_cut, grain)
+chart = get_chart(global_temp_df_timecut, grain)
 
 # plot climate chart
-st.altair_chart(
-    (chart).interactive(),
-    use_container_width=True
-)
+st.altair_chart((chart).interactive(), use_container_width=True)
+
 
 ### Weather section
 
-if df_city["api_response"][0] == 200:
+if my_city_api_response == 200:
 
     st.subheader(f"Current weather in {city_name}")
 
     # create 3 columns for metrics
     col1, col2, col3 = st.columns(3)
-    col1.metric("Temperature [°C]", round(df_city['temperature'], 1))
-    col2.metric("Windspeed [km/h]",  round(df_city["windspeed"], 2))
-    col3.metric(
-        "Winddirection [° clockwise from north]",
-        df_city["winddirection"]
-    )
+    col1.metric("Temperature [°C]", round(my_city_current_temp, 1))
+    col2.metric("Windspeed [km/h]", round(my_city_current_windspeed, 2))
+    col3.metric("Winddirection [° clockwise from north]", my_city_current_winddirection)
 
     # plot location of user-defined city
     city_coordinates_df = pd.DataFrame(
-        [(city_lat, city_long)],
-        columns=['lat', 'lon'])
+        [(my_city_lat, my_city_long)], columns=["lat", "lon"]
+    )
 
     st.map(city_coordinates_df)
 
 else:
     st.markdown(
         f"""Your call to the open weather API returned
-        {df_city['api_response'][0]}.
+        {my_city_api_response}.
         Try running the pipeline again with a different city!"""
     )
+
+
+st.subheader(f"Days over 30C in {city_name} per year")
+
+st.line_chart(my_city_historical_weather_data, x="time", y="heat_days_per_year")
 
 st.success(f"Congratulations, {user_name}, on finishing this tutorial!", icon="🎉")
 
@@ -317,8 +249,6 @@ with st.sidebar:
                 <img src='https://avatars.githubusercontent.com/u/12449437?s=280&v=4'  width='50' height='50'></a>
             <a href='https://airflow.apache.org/', title='Apache Airflow'>
                 <img src='https://pbs.twimg.com/media/EFOe7T4X4AEfIyl.jpg'  width='50' height='50'></a>
-            <a href='https://min.io/', title='MinIO'>
-                <img src='https://min.io/resources/img/logo/MINIO_Bird.png'  width='25' height='50'></a>
             <a href='https://duckdb.org/', title='DuckDB'>
                 <img src='https://duckdb.org/images/favicon/apple-touch-icon.png'  width='50' height='50'></a>
             <a href='https://streamlit.io/', title='Streamlit'>
@@ -343,7 +273,7 @@ with st.sidebar:
         # warning: using html in your streamlit app can open you to security
         # risk when writing unsafe html code,
         # see: https://github.com/streamlit/streamlit/issues/152
-        unsafe_allow_html=True
+        unsafe_allow_html=True,
     )
 
     st.button("Re-run")

@@ -5,7 +5,7 @@
 # --------------- #
 
 from airflow.decorators import dag
-from airflow.operators.empty import EmptyOperator
+from airflow.operators.bash import BashOperator
 from pendulum import datetime
 
 # -------------------- #
@@ -31,11 +31,11 @@ from include.global_variables import airflow_conf_variables as gv
 )
 def start():
 
-    # empty task which produces to the "start" Dataset to kick off the pipeline
-    # both the in_weather and in_climate DAGs are schedule to run on this Dataset
-    start_task = EmptyOperator(task_id="start", outlets=[gv.DS_START])
-
-    start_task
+    create_duckdb_pool = BashOperator(
+        task_id="bash_task",
+        bash_command="airflow pools set duckdb 1 'Pool for duckdb'",
+        outlets=[gv.DS_START]
+    )
 
 
 # when using the @dag decorator, the decorated function needs to be

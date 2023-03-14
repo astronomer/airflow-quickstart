@@ -9,3 +9,4 @@ DEBUG.py
 include/dwh
 include/dwh.wal
 **/TOOL_TEST_DAG.py
+scratch.py
