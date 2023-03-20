@@ -1,7 +1,7 @@
 """DAG that kicks off the pipeline by producing to the start dataset."""
 
 # --------------- #
-# PACKAGE IMPORTS #
+# Package imports #
 # --------------- #
 
 from airflow.decorators import dag
@@ -26,18 +26,23 @@ from include.global_variables import airflow_conf_variables as gv
     schedule="@once",
     catchup=False,
     default_args=gv.default_args,
-    description="Run this DAG to kick off the pipeline!",
-    tags=["start"],
+    description="Run this DAG to start the pipeline!",
+    tags=["start", "setup"],
 )
 def start():
 
+    # this task uses the BashOperator to run a bash command creating an Airflow
+    # pool called 'duckdb' which contains one worker slot. All tasks running
+    # queries against DuckDB will be assigned to this pool, preventing parallel
+    # requests to DuckDB.
     create_duckdb_pool = BashOperator(
         task_id="bash_task",
         bash_command="airflow pools set duckdb 1 'Pool for duckdb'",
-        outlets=[gv.DS_START]
+        outlets=[gv.DS_START],
     )
 
 
 # when using the @dag decorator, the decorated function needs to be
 # called after the function definition
-start()
+start_dag = start()
+

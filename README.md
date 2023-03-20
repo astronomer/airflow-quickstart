@@ -3,13 +3,22 @@ Overview
 
 Welcome to this hands-on repository to get started with [Apache Airflow](https://airflow.apache.org/)! :rocket:
 
-This repository contains a fully functional best practice Airflow ELT pipeline that can be run in GitHub codespaces (or locally with the [Astro CLI](https://docs.astronomer.io/astro/cli/install-cli)). 
+This repository contains a best practice Airflow ELT pipeline that can be run in GitHub codespaces (or locally with the [Astro CLI](https://docs.astronomer.io/astro/cli/install-cli)) to power a pre-built Streamlit App. 
 
-This Airflow pipeline will:
-- Ingest data from local csv files and a public API into a [MinIO](https://min.io/) container.
-- Load data from MinIO to [DuckDB](https://duckdb.org/).
-- Transform data within DuckDB using the [Astro SDK](https://astro-sdk-python.readthedocs.io/en/stable/index.html).
-- Use a [streamlit](https://streamlit.io/) app to display your data.
+## Part 1: Run a fully functional pipeline
+
+The ready to run Airflow pipeline will:
+- Retrieve the current weather for your city from an API.
+- Ingest Climate data from a local CSV file.
+- Load the data into DuckDB using the Astro SDK.
+- Run transformation on the data using the Astro SDK to create reporting tables powering a Streamlit App.
+
+## Part 2: Exercises
+
+Following the instructions in [Exercises](#exercises) you can extend the pipeline to show historical weather data for cities of your choice in the Streamlit App.
+During this process you will learn about Airflow features like [Datasets](https://docs.astronomer.io/learn/airflow-datasets), [dynamic task mapping](https://docs.astronomer.io/learn/dynamic-tasks) and the [Astro Python SDK](https://docs.astronomer.io/learn/astro-python-sdk).
+
+## Part 3: Play with it!
 
 Use this repository to explore Airflow best practices, experiment with your own DAGs and as a template for your own projects!
 

@@ -4,9 +4,6 @@ include/.DS_Store # macOS specific ignore
 airflow_settings.yaml
 astro
 __pycache__
-include/minio
 DEBUG.py
 include/dwh
 include/dwh.wal
-**/TOOL_TEST_DAG.py
-scratch.py
