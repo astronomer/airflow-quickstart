@@ -14,7 +14,6 @@ import global_variables.constants as c
 # VARIABLES #
 # --------- #
 
-country_name = uv.MY_COUNTRY
 city_name = uv.MY_CITY
 user_name = uv.MY_NAME
 hot_day = uv.HOT_DAY
@@ -24,7 +23,6 @@ duck_db_instance_name = (
     "dwh"  # when changing this value also change the db name in .env
 )
 global_temp_col = "Global"
-country_temp_col = country_name
 metric_col_name = "Average Surface Temperature"
 date_col_name = "date"
 decade_grain_col_name = "decade_average_temp"
@@ -134,7 +132,7 @@ if c.REPORT_CLIMATE_TABLE_NAME in tables:
     global_temp_df["Scale"] = "Global"
 
 if c.REPORT_HISTORICAL_WEATHER_TABLE_NAME in tables:
-    historical_weather_data = get_historic_weather_info()
+    historical_weather_table = get_historic_weather_info()
 
 if c.REPORT_HOT_DAYS_TABLE_NAME in tables:
     hot_days_table = get_hot_days()
@@ -293,9 +291,9 @@ if c.REPORT_HISTORICAL_WEATHER_TABLE_NAME in tables:
             format="YYYY",
         )
 
-        historical_weather_data = historical_weather_data[
-            (historical_weather_data["Year"] >= timespan[0])
-            & (historical_weather_data["Year"] <= timespan[1])
+        historical_weather_table = historical_weather_table[
+            (historical_weather_table["Year"] >= timespan[0])
+            & (historical_weather_table["Year"] <= timespan[1])
         ]
 
     # col 2 contains the check-boxes for global data and user-selected country
@@ -304,15 +302,14 @@ if c.REPORT_HISTORICAL_WEATHER_TABLE_NAME in tables:
         # add selectbox for grain of data to display
         grain = st.selectbox(
             "City",
-            historical_weather_data.city.unique(),
+            historical_weather_table.city.unique(),
             label_visibility="visible",
             index=0,
         )
 
-        selected_city_historical_weather = historical_weather_data[
-            historical_weather_data.city == grain
+        selected_city_historical_weather = historical_weather_table[
+            historical_weather_table.city == grain
         ]
-        print(selected_city_historical_weather.head())
 
     st.line_chart(selected_city_historical_weather, x="Year", y="Heat days per year")
 else:
@@ -334,7 +331,7 @@ else:
         "Do the exercises to build and run part 2 of the Airflow pipeline to find the hottest day in your birthyear and city."
     )
 
-if c.REPORT_HISTORICAL_WEATHER_TABLE_NAME in tables and len(historical_weather_data.city.unique()) == len(hot_days_table):
+if c.REPORT_HISTORICAL_WEATHER_TABLE_NAME in tables and len(historical_weather_table.city.unique()) == len(hot_days_table):
     st.success(
             f"Congratulations, {user_name}, on finishing this tutorial!", icon="🎉"
         )
