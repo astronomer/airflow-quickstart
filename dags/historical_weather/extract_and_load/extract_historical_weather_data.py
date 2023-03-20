@@ -32,7 +32,7 @@ from include.meterology_utils import (
 @aql.dataframe(pool="duckdb")
 def turn_json_into_table(in_json):
     """Converts the JSON input into one pandas dataframe."""
-    if len(in_json) > 1:
+    if len(pd.DataFrame(in_json).city.unique()) > 1:
         df = pd.concat([pd.DataFrame(d) for d in in_json], ignore_index=True)
     else:
         df = pd.DataFrame(in_json)
