@@ -5,6 +5,6 @@
         "version": "v1.9.0"
       }
   },
-  "postCreateCommand": "bash -i -c 'astro dev start -n --wait 5m'",
-  "forwardPorts": [9090, 8080, 8501, 8502]
+  "postCreateCommand": "bash -i -c 'bash ./.devcontainer/post_creation_script.sh'",
+  "forwardPorts": [8080]
 }
