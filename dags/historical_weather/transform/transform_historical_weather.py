@@ -54,27 +54,9 @@ def find_hottest_day_birthyear(in_table: pd.DataFrame, birthyear: int):
     # print ingested df to the logs
     gv.task_log.info(in_table)
 
-    df = in_table
+    output_df = in_table
 
-    # select the data from one year
-    try:
-        df_birthyear = df[df["time"].str.startswith(str(birthyear))]
-    except:
-        # if my birthyear is not available, use the year 2022
-        df_birthyear = df[df["time"].str.startswith(str("2022"))]
-
-    # group the data by city, use an apply function to find the row with the highest temperature
-    output_df = (
-        df_birthyear.groupby("city")
-        .apply(lambda x: x.loc[x["temperature_2m_max"].idxmax()])
-        .reset_index(drop=True)
-    )
-
-    # rename columns
-    output_df.columns = ["Date hottest day", "°C hottest day", "City", "lat", "long"]
-
-    # select columns shown in output table
-    output_df = output_df[["Date hottest day", "City", "°C hottest day"]]
+    ####### YOUR TRANSFORMATION ##########
 
     # print result table to the logs
     gv.task_log.info(output_df)
