@@ -18,7 +18,7 @@ The ready to run Airflow pipeline consists of 4 DAGs and will:
 
 ## Part 2: Exercises
 
-Following the [Part 2 Instructions](#part-2-instructions) to extend the pipeline to show historical weather data for cities of your choice in the Streamlit App.
+Following the [Part 2 Instructions](#part-2-instructions-exercises) to extend the pipeline to show historical weather data for cities of your choice in the Streamlit App.
 During this process you will learn about Airflow features like [Datasets](https://docs.astronomer.io/learn/airflow-datasets), [dynamic task mapping](https://docs.astronomer.io/learn/dynamic-tasks) and the [Astro Python SDK](https://docs.astronomer.io/learn/astro-python-sdk).
 
 ## Part 3: Play with it!
