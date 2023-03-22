@@ -60,8 +60,7 @@ Download the [Astro CLI](https://docs.astronomer.io/astro/cli/install-cli) to ru
 2. Install the Astro CLI by following the steps in the [Astro CLI documentation](https://docs.astronomer.io/astro/cli/install-cli). The main prerequisite is Docker Desktop/Docker Engine but no Docker knowledge is needed to run Airflow with the Astro CLI.
 3. Run `astro dev start` in your cloned repository.
 4. After your Astro project has started. View the Airflow UI at `localhost:8080`.
-5. Run `streamlit run include/streamlit_app.py` in your cloned repository.
-6. View the streamlit app at `localhost:8501`.
+5. View the streamlit app at `localhost:8501`. NOTE: The streamlit container can take a few minutes to start up;
 
 # Run the project
 
