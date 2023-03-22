@@ -37,7 +37,7 @@ def start():
     # requests to DuckDB.
     create_duckdb_pool = BashOperator(
         task_id="bash_task",
-        bash_command="airflow pools set duckdb 1 'Pool for duckdb'",
+        bash_command="airflow pools list | grep -q 'duckdb' || airflow pools set duckdb 1 'Pool for duckdb'",
         outlets=[gv.DS_START],
     )
 

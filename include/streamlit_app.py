@@ -19,8 +19,8 @@ user_name = uv.MY_NAME
 hot_day = uv.HOT_DAY
 
 
-duck_db_instance_name = (
-    "dwh"  # when changing this value also change the db name in .env
+duck_db_instance_path = (
+    "/app/include/dwh"  # when changing this value also change the db name in .env
 )
 global_temp_col = "Global"
 metric_col_name = "Average Surface Temperature"
@@ -33,14 +33,14 @@ year_grain_col_name = "year_average_temp"
 # -------------- #
 
 
-def list_currently_available_tables(db=f"include/{duck_db_instance_name}"):
+def list_currently_available_tables(db=duck_db_instance_path):
     cursor = duckdb.connect(db)
     tables = cursor.execute("SHOW TABLES;").fetchall()
     cursor.close()
     return [table[0] for table in tables]
 
 
-def get_current_weather_info_by_city(city, db=f"include/{duck_db_instance_name}"):
+def get_current_weather_info_by_city(city, db=duck_db_instance_path):
     cursor = duckdb.connect(db)
     row = cursor.execute(
         f"""SELECT lat, long, temperature, windspeed, winddirection, api_response
@@ -51,7 +51,7 @@ def get_current_weather_info_by_city(city, db=f"include/{duck_db_instance_name}"
     return row[0]
 
 
-def get_global_surface_temp_data(db=f"include/{duck_db_instance_name}"):
+def get_global_surface_temp_data(db=duck_db_instance_path):
 
     cursor = duckdb.connect(db)
 
@@ -74,7 +74,7 @@ def get_global_surface_temp_data(db=f"include/{duck_db_instance_name}"):
     return df
 
 
-def get_historic_weather_info(db=f"include/{duck_db_instance_name}"):
+def get_historic_weather_info(db=duck_db_instance_path):
 
     cursor = duckdb.connect(db)
     historical_weather_data = cursor.execute(
@@ -96,7 +96,7 @@ def get_historic_weather_info(db=f"include/{duck_db_instance_name}"):
     return df
 
 
-def get_hot_days(db=f"include/{duck_db_instance_name}"):
+def get_hot_days(db=duck_db_instance_path):
     cursor = duckdb.connect(db)
 
     hot_days_col_names = cursor.execute(
