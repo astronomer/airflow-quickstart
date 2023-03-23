@@ -4,6 +4,7 @@
 # PACKAGE IMPORTS #
 # --------------- #
 
+from airflow import Dataset
 from airflow.decorators import dag
 from pendulum import datetime
 
@@ -19,6 +20,12 @@ from astro.files import File
 from include.global_variables import airflow_conf_variables as gv
 from include.global_variables import constants as c
 
+# -------- #
+# Datasets #
+# -------- #
+
+start_dataset = Dataset("start")
+
 # --- #
 # DAG #
 # --- #
@@ -27,7 +34,7 @@ from include.global_variables import constants as c
 @dag(
     start_date=datetime(2023, 1, 1),
     # this DAG runs as soon as the start Dataset has been updated
-    schedule=[gv.DS_START],
+    schedule=[start_dataset],
     catchup=False,
     default_args=gv.default_args,
     description="Loads historic climate data form local storage to DuckDB.",
