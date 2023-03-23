@@ -18,6 +18,13 @@ from astro.sql.table import Table
 from include.global_variables import airflow_conf_variables as gv
 from include.global_variables import constants as c
 
+# -------- #
+# Datasets #
+# -------- #
+
+in_climate_dataset = Table(c.IN_CLIMATE_TABLE_NAME, conn_id=gv.CONN_ID_DUCKDB)
+
+
 # ----------------- #
 # Astro SDK Queries #
 # ----------------- #
@@ -47,9 +54,7 @@ def create_global_climate_reporting_table(
 @dag(
     start_date=datetime(2023, 1, 1),
     # this DAG runs as soon as the climate and weather data is ready in DuckDB
-    schedule=[
-        Table(c.IN_CLIMATE_TABLE_NAME, conn_id=gv.CONN_ID_DUCKDB),
-    ],
+    schedule=[in_climate_dataset],
     catchup=False,
     default_args=gv.default_args,
     description="Runs a transformation on climate data in DuckDB.",
@@ -61,9 +66,7 @@ def transform_climate_data():
     # permanent reporting table
     create_global_climate_reporting_table(
         in_climate=Table(name=c.IN_CLIMATE_TABLE_NAME, conn_id=gv.CONN_ID_DUCKDB),
-        output_table=Table(
-            name=c.REPORT_CLIMATE_TABLE_NAME, conn_id=gv.CONN_ID_DUCKDB
-        ),
+        output_table=Table(name=c.REPORT_CLIMATE_TABLE_NAME, conn_id=gv.CONN_ID_DUCKDB),
     )
 
 

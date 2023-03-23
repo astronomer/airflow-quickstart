@@ -3,7 +3,21 @@ Overview
 
 Welcome to this hands-on repository to get started with [Apache Airflow](https://airflow.apache.org/)! :rocket:
 
-This repository contains a simple Airflow ELT pipeline that can be run in GitHub codespaces (or locally with the [Astro CLI](https://docs.astronomer.io/astro/cli/install-cli)) to power a pre-built Streamlit App. 
+This repository contains a simple Airflow pipeline following an ELT pattern, that can be run in GitHub codespaces (or locally with the [Astro CLI](https://docs.astronomer.io/astro/cli/install-cli)). The pipeline will ingest climate data from a csv file, as well local weather data from an API to create interactive visualizations of temperature changes over time. 
+
+This is accomplished by using a set of tools in six Airflow DAGs:
+
+- The [Astro Python SDK](https://astro-sdk-python.readthedocs.io/en/stable/index.html) is used for ELT operations.
+- [DuckDB](https://duckdb.org/), a relational database, is used to store tables of the ingested data as well as the resulting tables after transformations.
+- [Streamlit](https://streamlit.io/), a python package to create interactive apps is used to display the data as a dashboard. The streamlit app retrieves its data from tables in DuckDB.
+
+All tools used are open source and no additional accounts are needed.
+
+After completing all tasks the streamlit app will look similar to the following screenshots:
+
+![Finished Streamlit App Part 1](src/streamlit_result_1.png)
+![Finished Streamlit App Part 2](src/streamlit_result_2.png)
+![Finished Streamlit App Part 3](src/streamlit_result_3.png)
 
 ## Part 1: Run a fully functional pipeline
 
@@ -60,7 +74,7 @@ Download the [Astro CLI](https://docs.astronomer.io/astro/cli/install-cli) to ru
 2. Install the Astro CLI by following the steps in the [Astro CLI documentation](https://docs.astronomer.io/astro/cli/install-cli). The main prerequisite is Docker Desktop/Docker Engine but no Docker knowledge is needed to run Airflow with the Astro CLI.
 3. Run `astro dev start` in your cloned repository.
 4. After your Astro project has started. View the Airflow UI at `localhost:8080`.
-5. View the streamlit app at `localhost:8501`. NOTE: The streamlit container can take a few minutes to start up;
+5. View the streamlit app at `localhost:8501`. NOTE: The streamlit container can take a few minutes to start up.
 
 # Run the project
 
@@ -126,9 +140,9 @@ In your streamlit app you can now select the different cities from the dropdown 
 
 ### Exercise 3 - Astro Python SDK
 
-The `transform_historical_weather_data` uses the `aql.dataframe` decorator to use Pandas to transform data. Currently the `find_hottest_day_birthyear` just prints out whatever table is passed into the function.
+The Astro Python SDK is an open source package built on top of Airflow to provide you with functions and classes that simplify common ELT and ETL operations such as loading files or using SQL or pandas to transform data in a database-agnostic way. View the [Astro Python SDK documentation](https://astro-sdk-python.readthedocs.io/en/stable/index.html) for more information. 
 
-Use pandas to transform the data shown in `in_table` to search for the hottest day in your birthyear for each city you retrieved data for. The streamlit app is set up to print the returned dataframe.
+The `transform_historical_weather_data` uses the `aql.dataframe` decorator to use Pandas to transform data. The table returned by the `find_hottest_day_birthyear` task will be printed out at the end of your streamlit app. By default no transformation is made to the table in the task, let's change that!
 
 ```python
 @aql.dataframe(pool="duckdb")
@@ -146,7 +160,9 @@ def find_hottest_day_birthyear(in_table: pd.DataFrame, birthyear: int):
     return output_df
 ```
 
-Tip: Both, the `in_table` dataframe and the `output_df` dataframe are printed to the logs of the `find_hottest_day_birthyear` task. The goal is to have an output like in the screenshot shown below.
+Use pandas to transform the data shown in `in_table` to search for the hottest day in your birthyear for each city you retrieved data for.
+
+Tip: Both, the `in_table` dataframe and the `output_df` dataframe are printed to the logs of the `find_hottest_day_birthyear` task. The goal is to have an output like in the screenshot shown below. If your table does not contain information for several cities, make sure you completed exercise 2 correctly.
 
 ![Streamlit app](src/part_2_hottest_day_output.png)
 
@@ -167,6 +183,12 @@ This repository uses a [custom codespaces container](https://github.com/astronom
 - The Airflow triggerer
 
 Additionally when using codespaces, the command to run the streamlit app is automatically run upon starting the environment.
+
+## Data sources
+
+The global climate data in the local CSV file was retrieved from the [Climate Change: Earth Surface Temperature Data Kaggle dataset](https://www.kaggle.com/datasets/berkeleyearth/climate-change-earth-surface-temperature-data) by Berkely Earth and Kristen Sissener which was uploaded under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).
+
+The current and historical weather data is queried from the [Open Meteo API](https://open-meteo.com/) ([CC BY 4.0](https://creativecommons.org/licenses/by/4.0)).
 
 Project Structure
 ================

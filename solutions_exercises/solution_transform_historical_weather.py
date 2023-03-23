@@ -1,4 +1,4 @@
-"""DAG that runs a transformation on data in DuckDB using the Astro SDK"""
+"DAG that runs a transformation on data in DuckDB using the Astro SDK."
 
 # --------------- #
 # PACKAGE IMPORTS #
@@ -19,6 +19,14 @@ from astro.sql.table import Table
 from include.global_variables import airflow_conf_variables as gv
 from include.global_variables import user_input_variables as uv
 from include.global_variables import constants as c
+
+# -------- #
+# Datasets #
+# -------- #
+
+in_historical_weather_dataset = Table(
+    name=c.IN_HISTORICAL_WEATHER_TABLE_NAME, conn_id=gv.CONN_ID_DUCKDB
+)
 
 # ----------------- #
 # Astro SDK Queries #
@@ -87,7 +95,7 @@ def find_hottest_day_birthyear(in_table: pd.DataFrame, birthyear: int):
 # --- #
 
 # ---------- #
-# Exercise 4 #
+# Exercise 1 #
 # ---------- #
 # Schedule this DAG to run as soon as the 'extract_historical_weather_data' DAG has finished running.
 # Tip: You can either add your own Dataset as an outlet in the last task of the previous DAG or
@@ -97,7 +105,7 @@ def find_hottest_day_birthyear(in_table: pd.DataFrame, birthyear: int):
 @dag(
     start_date=datetime(2023, 1, 1),
     # SOLUTION: Run this DAG as soon as the Astro Python SDK Table where ingested historical weather data is stored is updated
-    schedule=Table(name=c.IN_HISTORICAL_WEATHER_TABLE_NAME, conn_id=gv.CONN_ID_DUCKDB),
+    schedule=[in_historical_weather_dataset],
     catchup=False,
     default_args=gv.default_args,
     description="Runs transformations on climate and current weather data in DuckDB.",

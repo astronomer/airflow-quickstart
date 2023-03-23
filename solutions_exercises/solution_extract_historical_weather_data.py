@@ -4,6 +4,7 @@
 # PACKAGE IMPORTS #
 # --------------- #
 
+from airflow import Dataset
 from airflow.decorators import dag, task
 from pendulum import datetime
 import pandas as pd
@@ -24,9 +25,16 @@ from include.meterology_utils import (
     get_historical_weather_from_city_coordinates,
 )
 
-# --- #
-# DAG #
-# --- #
+# -------- #
+# Datasets #
+# -------- #
+
+start_dataset = Dataset("start")
+
+
+# ----------------- #
+# Astro SDK Queries #
+# ----------------- #
 
 
 @aql.dataframe(pool="duckdb")
@@ -39,6 +47,11 @@ def turn_json_into_table(in_json):
     return df
 
 
+# --- #
+# DAG #
+# --- #
+
+
 # ---------- #
 # Exercise 1 #
 # ---------- #
@@ -49,7 +62,7 @@ def turn_json_into_table(in_json):
 @dag(
     start_date=datetime(2023, 1, 1),
     # SOLUTION: schedule the DAG to run on the DS_START Dataset Dataset("start")
-    schedule=[gv.DS_START],
+    schedule=[start_dataset],
     catchup=False,
     default_args=gv.default_args,
     description="DAG that retrieves weather information and saves it to a local JSON.",

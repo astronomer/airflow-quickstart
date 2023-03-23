@@ -278,6 +278,16 @@ st.subheader(f"Days over {hot_day}°C per year")
 
 if c.REPORT_HISTORICAL_WEATHER_TABLE_NAME in tables:
 
+    if len(historical_weather_table.city.unique()) == 1:
+        st.markdown(
+            """
+            By default the graph below will show hot days per year for the city of Bern.
+            Complete exercise 2 to use dynamic task mapping to retrieve historical weather information from list of cities of your choosing that will populate the 
+            dropdown menu.
+            """
+        )
+
+
     # define columns
     col1, col2 = st.columns([3, 2])
 
@@ -312,34 +322,36 @@ if c.REPORT_HISTORICAL_WEATHER_TABLE_NAME in tables:
         ]
 
     st.line_chart(selected_city_historical_weather, x="Year", y="Heat days per year")
-else:
-    st.markdown(
-        "Do the exercises to build and run part 2 of the Airflow pipeline to count the number of hot days per year in different cities."
-    )
+    
 
 # ------------------------ #
 # Hottest day in birthyear #
 # ------------------------ #
 
 
-if c.REPORT_HOT_DAYS_TABLE_NAME in tables:
+if c.REPORT_HOT_DAYS_TABLE_NAME in tables and c.REPORT_HISTORICAL_WEATHER_TABLE_NAME in tables:
     st.subheader(f"Hottest Day in {uv.BIRTH_YEAR}")
+
+    if len(historical_weather_table.city.unique()) != len(hot_days_table):
+        st.markdown(
+            """
+            The table below shows the output of the `find_hottest_day_birthyear` task in the `transform_historical_weather` DAG.
+            By default this table will contain historical weather data for the city of Bern. Complete exercise 2 to retrieve data for a list of cities of your choosing and
+            transform the table within the `find_hottest_day_birthyear` task to display the hottest day in your birthyear for each city (exercise 3).
+            """
+        )
+
     st.write(hot_days_table)
 else:
     st.subheader("Hottest Day in your birthyear")
     st.markdown(
-        "Do the exercises to build and run part 2 of the Airflow pipeline to find the hottest day in your birthyear and city."
+        "Run part 2 of the Airflow pipeline to see a graph with historical weather information about the city of Bern. Complete exercise 2 and 3 to customize the graph and table."
     )
 
-if c.REPORT_HISTORICAL_WEATHER_TABLE_NAME in tables and len(historical_weather_table.city.unique()) == len(hot_days_table):
-    st.success(
-            f"Congratulations, {user_name}, on finishing this tutorial!", icon="🎉"
-        )
-else:
-    st.markdown(
-        """Use dynamic task mapping to retrieve historical weather information from several cities and have the final table display the hottest day
-        for each city for your birthyear or a year of your choice."""
-    )
+if c.REPORT_HISTORICAL_WEATHER_TABLE_NAME in tables and len(
+    historical_weather_table.city.unique()
+) == len(hot_days_table):
+    st.success(f"Congratulations, {user_name}, on finishing this tutorial!", icon="🎉")
 
 
 # ------- #
