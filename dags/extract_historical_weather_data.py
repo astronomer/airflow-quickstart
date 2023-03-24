@@ -7,7 +7,6 @@
 from airflow.decorators import dag, task
 from pendulum import datetime
 import pandas as pd
-from typing import List
 
 # import tools from the Astro SDK
 from astro import sql as aql
@@ -31,11 +30,11 @@ from include.meterology_utils import (
 
 @aql.dataframe(pool="duckdb")
 def turn_json_into_table(in_json):
-    """Converts the JSON input into one pandas dataframe."""
-    if len(pd.DataFrame(in_json).city.unique()) > 1:
-        df = pd.concat([pd.DataFrame(d) for d in in_json], ignore_index=True)
-    else:
+    """Converts the list of JSON input into one pandas dataframe."""
+    if type(in_json) == dict:
         df = pd.DataFrame(in_json)
+    else:
+        df = pd.concat([pd.DataFrame(d) for d in in_json], ignore_index=True)
     return df
 
 
