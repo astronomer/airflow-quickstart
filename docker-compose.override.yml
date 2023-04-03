@@ -1,0 +1,21 @@
+version: '3.1'
+services:
+  streamlit:
+    image: python:3.9
+    command: bash -c "pip install -r /app/include/streamlit_container_requirements.txt && streamlit run --server.enableWebsocketCompression=false --server.enableCORS=false --server.enableXsrfProtection=false /app/include/streamlit_app.py"
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./include:/app/include
+  scheduler:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+  webserver:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+  triggerer:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+  postgres:
+    extra_hosts:
+      - "host.docker.internal:host-gateway" 
