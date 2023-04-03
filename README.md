@@ -26,13 +26,13 @@ Follow the [Part 1 Instructions](#part-1-instructions) to get started!
 The ready to run Airflow pipeline consists of 4 DAGs and will:
 
 - Retrieve the current weather for your city from an API.
-- Ingest Climate data from a local CSV file.
+- Ingest climate data from a local CSV file.
 - Load the data into DuckDB using the Astro SDK.
 - Run a transformation on the data using the Astro SDK to create a reporting table powering a Streamlit App.
 
 ## Part 2: Exercises
 
-Following the [Part 2 Instructions](#part-2-instructions-exercises) to extend the pipeline to show historical weather data for cities of your choice in the Streamlit App.
+Follow the [Part 2 Instructions](#part-2-instructions-exercises) to extend the pipeline to show historical weather data for cities of your choice in the Streamlit App.
 During this process you will learn about Airflow features like [Datasets](https://docs.astronomer.io/learn/airflow-datasets), [dynamic task mapping](https://docs.astronomer.io/learn/dynamic-tasks) and the [Astro Python SDK](https://docs.astronomer.io/learn/astro-python-sdk).
 
 ## Part 3: Play with it!
@@ -71,7 +71,7 @@ Run this Airflow project without installing anything locally.
 Download the [Astro CLI](https://docs.astronomer.io/astro/cli/install-cli) to run Airflow locally in Docker. `astro` is the only package you will need to install.
 
 1. Run `git clone https://github.com/TJaniF/astronomer-codespaces-test.git` on your computer to create a local clone of this repository.
-2. Install the Astro CLI by following the steps in the [Astro CLI documentation](https://docs.astronomer.io/astro/cli/install-cli). The main prerequisite is Docker Desktop/Docker Engine but no Docker knowledge is needed to run Airflow with the Astro CLI.
+2. Install the Astro CLI by following the steps in the [Astro CLI documentation](https://docs.astronomer.io/astro/cli/install-cli). Docker Desktop/Docker Engine is a prerequisite, but you don't need in-depth Docker knowledge to run Airflow with the Astro CLI.
 3. Run `astro dev start` in your cloned repository.
 4. After your Astro project has started. View the Airflow UI at `localhost:8080`.
 5. View the streamlit app at `localhost:8501`. NOTE: The streamlit container can take a few minutes to start up.
