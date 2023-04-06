@@ -1,5 +1,3 @@
-from geopy.geocoders import Nominatim
-from geopy.adapters import AdapterHTTPError
 import requests
 import pandas as pd
 from include.global_variables import airflow_conf_variables as gv
@@ -9,18 +7,16 @@ def get_lat_long_for_cityname(city: str):
     """Converts a string of a city name provided into
     lat/long coordinates."""
 
-    geolocator = Nominatim(user_agent="MyApp")
-
     try:
-        location = geolocator.geocode(city)
-        lat = location.latitude
-        long = location.longitude
+        r = requests.get(f"https://photon.komoot.io/api/?q={city}")
+        long = r.json()["features"][0]["geometry"]["coordinates"][0]
+        lat = r.json()["features"][0]["geometry"]["coordinates"][1]
 
         # log the coordinates retrieved
         gv.task_log.info(f"Coordinates for {city}: {lat}/{long}")
 
     # if the coordinates cannot be retrieved log a warning
-    except (AttributeError, KeyError, ValueError, AdapterHTTPError) as err:
+    except (AttributeError, KeyError, ValueError) as err:
         gv.task_log.warn(
             f"""Coordinates for {city}: could not be retrieved.
             Error: {err}"""
