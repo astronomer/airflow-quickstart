@@ -3,4 +3,4 @@ astro-sdk-python==1.5.0
 duckdb==0.7.1
 minio==7.1.13
 pandas==1.5.3
-streamlit==1.18.0
+streamlit==1.23.0
