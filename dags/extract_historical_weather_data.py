@@ -87,13 +87,38 @@ def extract_historical_weather_data():
     coordinates = get_lat_long_for_city(city="Bern")
     historical_weather = get_historical_weather(coordinates=coordinates)
 
-    # use the @aql.dataframe decorated function to write the (list of) JSON(s) returned from
-    # the get_current_weather task as a permanent table to DuckDB
+    @task
+    def turn_json_into_table(
+        duckdb_conn_id: str,
+        historical_weather_table_name: str,
+        historical_weather: list,
+    ):
+        """
+        Convert the JSON input with info about historical weather into a pandas 
+        DataFrame and load it into DuckDB.
+        Args:
+            duckdb_conn_id (str): The connection ID for the DuckDB connection.
+            historical_weather_table_name (str): The name of the table to store the historical weather data.
+            historical_weather (list): The historical weather data to load into DuckDB.
+        """
+        from duckdb_provider.hooks.duckdb_hook import DuckDBHook
+
+        historical_weather_df = pd.DataFrame(historical_weather)
+
+        duckdb_conn = DuckDBHook(duckdb_conn_id).get_conn()
+        cursor = duckdb_conn.cursor()
+        cursor.sql(
+            f"CREATE TABLE IF NOT EXISTS {historical_weather_table_name} AS SELECT * FROM historical_weather_df"
+        )
+        cursor.sql(
+            f"INSERT INTO {historical_weather_table_name} SELECT * FROM historical_weather_df"
+        )
+        cursor.close()
+
     turn_json_into_table(
-        in_json=historical_weather,
-        output_table=Table(
-            name=c.IN_HISTORICAL_WEATHER_TABLE_NAME, conn_id=gv.CONN_ID_DUCKDB
-        ),
+        duckdb_conn_id=gv.CONN_ID_DUCKDB,
+        historical_weather_table_name=c.IN_HISTORICAL_WEATHER_TABLE_NAME,
+        historical_weather=historical_weather,
     )
 
 
