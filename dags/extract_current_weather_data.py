@@ -9,10 +9,6 @@ from airflow.decorators import dag, task
 from pendulum import datetime
 import pandas as pd
 
-# import tools from the Astro SDK
-from astro import sql as aql
-from astro.sql.table import Table
-
 # -------------------- #
 # Local module imports #
 # -------------------- #
@@ -34,12 +30,6 @@ start_dataset = Dataset("start")
 # --- #
 # DAG #
 # --- #
-
-# a dataframe decorated function turns a returned Pandas dataframe into
-# a Astro SDK Table object
-@aql.dataframe(pool="duckdb")
-def turn_json_into_table(in_json):
-    return pd.DataFrame(in_json)
 
 
 @dag(
@@ -82,13 +72,36 @@ def extract_current_weather_data():
     # set dependencies to get current weather
     current_weather = get_current_weather(get_lat_long_for_city(city=uv.MY_CITY))
 
-    # use the @aql.dataframe decorated function to write the JSON returned from
-    # the get_current_weather task as a permanent table to DuckDB
+    @task
+    def turn_json_into_table(
+        duckdb_conn_id: str, current_weather_table_name: str, current_weather: list
+    ):
+        """
+        Convert the JSON input with info about the current weather into a pandas
+        DataFrame and load it into DuckDB.
+        Args:
+            duckdb_conn_id (str): The connection ID for the DuckDB connection.
+            current_weather_table_name (str): The name of the table to be created in DuckDB.
+            current_weather (list): The JSON input to be loaded into DuckDB.
+        """
+        from duckdb_provider.hooks.duckdb_hook import DuckDBHook
+
+        current_weather_df = pd.DataFrame(current_weather)
+
+        duckdb_conn = DuckDBHook(duckdb_conn_id).get_conn()
+        cursor = duckdb_conn.cursor()
+        cursor.sql(
+            f"CREATE TABLE IF NOT EXISTS {current_weather_table_name} AS SELECT * FROM current_weather_df"
+        )
+        cursor.sql(
+            f"INSERT INTO {current_weather_table_name} SELECT * FROM current_weather_df"
+        )
+        cursor.close()
+
     turn_json_into_table(
-        current_weather,
-        output_table=Table(
-            name=c.IN_CURRENT_WEATHER_TABLE_NAME, conn_id=gv.CONN_ID_DUCKDB
-        ),
+        duckdb_conn_id=gv.CONN_ID_DUCKDB,
+        current_weather_table_name=c.IN_CURRENT_WEATHER_TABLE_NAME,
+        current_weather=current_weather,
     )
 
 

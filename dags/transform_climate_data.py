@@ -5,6 +5,7 @@
 # --------------- #
 
 from airflow.decorators import dag
+from airflow.datasets import Dataset
 from pendulum import datetime
 
 # import tools from the Astro SDK
@@ -17,13 +18,6 @@ from astro.sql.table import Table
 
 from include.global_variables import airflow_conf_variables as gv
 from include.global_variables import constants as c
-
-# -------- #
-# Datasets #
-# -------- #
-
-in_climate_dataset = Table(c.IN_CLIMATE_TABLE_NAME, conn_id=gv.CONN_ID_DUCKDB)
-
 
 # ----------------- #
 # Astro SDK Queries #
@@ -54,7 +48,7 @@ def create_global_climate_reporting_table(
 @dag(
     start_date=datetime(2023, 1, 1),
     # this DAG runs as soon as the climate and weather data is ready in DuckDB
-    schedule=[in_climate_dataset],
+    schedule=[Dataset("duckdb://include/dwh/in_climate")],
     catchup=False,
     default_args=gv.default_args,
     description="Runs a transformation on climate data in DuckDB.",
