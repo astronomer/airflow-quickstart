@@ -93,7 +93,7 @@ def extract_historical_weather_data():
     def turn_json_into_table(
         duckdb_conn_id: str,
         historical_weather_table_name: str,
-        historical_weather: list,
+        historical_weather: dict,
     ):
         """
         Convert the JSON input with info about historical weather into a pandas
@@ -105,13 +105,16 @@ def extract_historical_weather_data():
         """
         from duckdb_provider.hooks.duckdb_hook import DuckDBHook
 
-        list_of_df = []
+        if type(historical_weather) == list:
+            list_of_df = []
 
-        for item in historical_weather:
-            df = pd.DataFrame(item)
-            list_of_df.append(df)
+            for item in historical_weather:
+                df = pd.DataFrame(item)
+                list_of_df.append(df)
 
-        historical_weather_df = pd.concat(list_of_df, ignore_index=True)
+            historical_weather_df = pd.concat(list_of_df, ignore_index=True)
+        else:
+            historical_weather_df = pd.DataFrame(historical_weather)
 
         duckdb_conn = DuckDBHook(duckdb_conn_id).get_conn()
         cursor = duckdb_conn.cursor()
