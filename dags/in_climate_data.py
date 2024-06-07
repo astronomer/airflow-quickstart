@@ -86,7 +86,11 @@ def in_climate_data():
                 'LandAndOceanAverageTemperature': 'DOUBLE',
                 'LandAndOceanAverageTemperatureUncertainty': 'DOUBLE'
             });
-            """.replace("CSV_FILE_PATH", csv_file_path).replace("CLIMATE_TABLE_NAME", climate_table_name)
+            """.replace(
+                "CSV_FILE_PATH", csv_file_path
+            ).replace(
+                "CLIMATE_TABLE_NAME", climate_table_name
+            )
         )
 
     import_climate_data(

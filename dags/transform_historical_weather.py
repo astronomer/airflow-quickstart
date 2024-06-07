@@ -4,7 +4,7 @@
 # PACKAGE IMPORTS #
 # --------------- #
 
-from airflow.decorators import dag
+from airflow.decorators import dag, task
 from pendulum import datetime
 import pandas as pd
 
@@ -40,30 +40,6 @@ def create_historical_weather_reporting_table(in_table: Table, hot_day_celsius: 
     """
 
 
-# ---------- #
-# Exercise 3 #
-# ---------- #
-# Use pandas to transform the 'historical_weather_reporting_table' into a table
-# showing the hottest day in your year of birth (or the closest year, if your year
-# of birth is not available for your city). Make sure the function returns a pandas dataframe
-# Tip: the returned dataframe will be shown in your streamlit App.
-
-# import a Astro SDK Table as a pandas dataframe by typing the import as pd.DataFrame
-@aql.dataframe(pool="duckdb")
-def find_hottest_day_birthyear(in_table: pd.DataFrame, birthyear: int):
-    # print ingested df to the logs
-    gv.task_log.info(in_table)
-
-    output_df = in_table
-
-    ####### YOUR TRANSFORMATION ##########
-
-    # print result table to the logs
-    gv.task_log.info(output_df)
-
-    return output_df
-
-
 # --- #
 # DAG #
 # --- #
@@ -72,8 +48,7 @@ def find_hottest_day_birthyear(in_table: pd.DataFrame, birthyear: int):
 # Exercise 1 #
 # ---------- #
 # Schedule this DAG to run as soon as the 'extract_historical_weather_data' DAG has finished running.
-# Tip: You can either add your own Dataset as an outlet in the last task of the previous DAG or
-# use the a Astro Python SDK Table based Dataset as seen in the 'transform_climate_data' DAG.
+# Tip: You will need to use the dataset feature.
 
 
 @dag(
@@ -97,14 +72,50 @@ def transform_historical_weather():
         ),
     )
 
+    # ---------- #
+    # Exercise 3 #
+    # ---------- #
+    # Use pandas to transform the 'historical_weather_reporting_table' into a table
+    # showing the hottest day in your year of birth (or the closest year, if your year
+    # of birth is not available for your city).
+    # Tip: the saved dataframe will be shown in your streamlit App.
+
+    @task(
+        pool="duckdb",
+    )
+    def find_hottest_day_birthyear(
+        duckdb_conn_id: str,
+        input_table_name: pd.DataFrame,
+        birthyear: int,
+        output_table_name: str,
+    ):
+
+        from duckdb_provider.hooks.duckdb_hook import DuckDBHook
+
+        duckdb_conn = DuckDBHook(duckdb_conn_id).get_conn()
+        cursor = duckdb_conn.cursor()
+        input_df = cursor.sql(
+            f"""
+            SELECT * FROM {input_table_name}
+            """
+        ).df()
+
+        ####### YOUR TRANSFORMATION ##########
+
+        output_df = input_df
+
+        # saving the output_df to a new table
+        cursor.sql(
+            f"CREATE TABLE IF NOT EXISTS {output_table_name} AS SELECT * FROM output_df"
+        )
+        cursor.sql(f"INSERT INTO {output_table_name} SELECT * FROM output_df")
+        cursor.close()
+
     find_hottest_day_birthyear(
-        in_table=Table(
-            name=c.IN_HISTORICAL_WEATHER_TABLE_NAME, conn_id=gv.CONN_ID_DUCKDB
-        ),
+        duckdb_conn_id=gv.CONN_ID_DUCKDB,
+        input_table_name=c.IN_HISTORICAL_WEATHER_TABLE_NAME,
         birthyear=uv.BIRTH_YEAR,
-        output_table=Table(
-            name=c.REPORT_HOT_DAYS_TABLE_NAME, conn_id=gv.CONN_ID_DUCKDB
-        ),
+        output_table_name=c.REPORT_HOT_DAYS_TABLE_NAME,
     )
 
 

@@ -1,1 +1,6 @@
 build-essential
+gcc
+libsnappy-dev 
+libthrift-dev 
+libzstd-dev 
+libicu-dev

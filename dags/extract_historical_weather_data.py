@@ -1,16 +1,16 @@
-"""DAG that retrieves weather information and saves it to a local JSON."""
+"""DAG that retrieves weather information and saves it to duckdb."""
 
 # --------------- #
 # PACKAGE IMPORTS #
 # --------------- #
 
 from airflow.decorators import dag, task
+from airflow.datasets import Dataset
 from pendulum import datetime
 import pandas as pd
 
 # import tools from the Astro SDK
 from astro import sql as aql
-from astro.sql.table import Table
 
 # -------------------- #
 # Local module imports #
@@ -87,14 +87,16 @@ def extract_historical_weather_data():
     coordinates = get_lat_long_for_city(city="Bern")
     historical_weather = get_historical_weather(coordinates=coordinates)
 
-    @task
+    @task(
+        outlets=[Dataset("duckdb://include/dwh/historical_weather_data")],
+    )
     def turn_json_into_table(
         duckdb_conn_id: str,
         historical_weather_table_name: str,
         historical_weather: list,
     ):
         """
-        Convert the JSON input with info about historical weather into a pandas 
+        Convert the JSON input with info about historical weather into a pandas
         DataFrame and load it into DuckDB.
         Args:
             duckdb_conn_id (str): The connection ID for the DuckDB connection.
@@ -103,7 +105,13 @@ def extract_historical_weather_data():
         """
         from duckdb_provider.hooks.duckdb_hook import DuckDBHook
 
-        historical_weather_df = pd.DataFrame(historical_weather)
+        list_of_df = []
+
+        for item in historical_weather:
+            df = pd.DataFrame(item)
+            list_of_df.append(df)
+
+        historical_weather_df = pd.concat(list_of_df, ignore_index=True)
 
         duckdb_conn = DuckDBHook(duckdb_conn_id).get_conn()
         cursor = duckdb_conn.cursor()

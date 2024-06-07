@@ -1,10 +1,11 @@
-"DAG that runs a transformation on data in DuckDB using the Astro SDK."
+"""DAG that runs a transformation on data in DuckDB using the Astro SDK"""
 
 # --------------- #
 # PACKAGE IMPORTS #
 # --------------- #
 
-from airflow.decorators import dag
+from airflow.decorators import dag, task
+from airflow.datasets import Dataset
 from pendulum import datetime
 import pandas as pd
 
@@ -19,14 +20,6 @@ from astro.sql.table import Table
 from include.global_variables import airflow_conf_variables as gv
 from include.global_variables import user_input_variables as uv
 from include.global_variables import constants as c
-
-# -------- #
-# Datasets #
-# -------- #
-
-in_historical_weather_dataset = Table(
-    name=c.IN_HISTORICAL_WEATHER_TABLE_NAME, conn_id=gv.CONN_ID_DUCKDB
-)
 
 # ----------------- #
 # Astro SDK Queries #
@@ -48,48 +41,6 @@ def create_historical_weather_reporting_table(in_table: Table, hot_day_celsius: 
     """
 
 
-# ---------- #
-# Exercise 3 #
-# ---------- #
-# Use pandas to transform the 'historical_weather_reporting_table' into a table
-# showing the hottest day in your year of birth (or a year of your choice, if your year
-# of birth is not available for your city). Make sure the function returns a pandas dataframe
-# Tip: the returned dataframe will be shown in your streamlit App.
-
-# SOLUTION: One of many possible solutions to retrieve the warmest day by year by city
-@aql.dataframe(pool="duckdb")
-def find_hottest_day_birthyear(in_table: pd.DataFrame, birthyear: int):
-    # print ingested df to the logs
-    gv.task_log.info(in_table)
-
-    df = in_table
-
-    # select the data from one year
-    try:
-        df_birthyear = df[df["time"].str.startswith(str(birthyear))]
-    except:
-        # if my birthyear is not available, use the year 2022
-        df_birthyear = df[df["time"].str.startswith(str("2022"))]
-
-    # group the data by city, use an apply function to find the row with the highest temperature
-    output_df = (
-        df_birthyear.groupby("city")
-        .apply(lambda x: x.loc[x["temperature_2m_max"].idxmax()])
-        .reset_index(drop=True)
-    )
-
-    # rename columns
-    output_df.columns = ["Date hottest day", "°C hottest day", "City", "lat", "long"]
-
-    # select columns shown in output table
-    output_df = output_df[["Date hottest day", "City", "°C hottest day"]]
-
-    # print result table to the logs
-    gv.task_log.info(output_df)
-
-    return output_df
-
-
 # --- #
 # DAG #
 # --- #
@@ -98,14 +49,13 @@ def find_hottest_day_birthyear(in_table: pd.DataFrame, birthyear: int):
 # Exercise 1 #
 # ---------- #
 # Schedule this DAG to run as soon as the 'extract_historical_weather_data' DAG has finished running.
-# Tip: You can either add your own Dataset as an outlet in the last task of the previous DAG or
-# use the a Astro Python SDK Table based Dataset as seen in the 'transform_climate_data' DAG.
+# Tip: You will need to use the dataset feature.
 
 
 @dag(
     start_date=datetime(2023, 1, 1),
-    # SOLUTION: Run this DAG as soon as the Astro Python SDK Table where ingested historical weather data is stored is updated
-    schedule=[in_historical_weather_dataset],
+    # SOLUTION: Run this DAG as soon as the historical weather data table is updated
+    schedule=[Dataset("duckdb://include/dwh/historical_weather_data")],
     catchup=False,
     default_args=gv.default_args,
     description="Runs transformations on climate and current weather data in DuckDB.",
@@ -123,14 +73,72 @@ def solution_transform_historical_weather():
         ),
     )
 
+    # ---------- #
+    # Exercise 3 #
+    # ---------- #
+    # One possible solution of using pandas to find the hottest day of the year
+    # for a given birth year.
+
+    @task(
+        pool="duckdb",
+    )
+    def find_hottest_day_birthyear(
+        duckdb_conn_id: str,
+        input_table_name: pd.DataFrame,
+        birthyear: int,
+        output_table_name: str,
+    ):
+
+        from duckdb_provider.hooks.duckdb_hook import DuckDBHook
+
+        duckdb_conn = DuckDBHook(duckdb_conn_id).get_conn()
+        cursor = duckdb_conn.cursor()
+        input_df = cursor.sql(
+            f"""
+            SELECT * FROM {input_table_name}
+            """
+        ).df()
+
+        df = input_df
+
+        # select the data from one year
+        try:
+            df_birthyear = df[df["time"].str.startswith(str(birthyear))]
+        except:
+            # if my birthyear is not available, use the year 2022
+            df_birthyear = df[df["time"].str.startswith(str("2022"))]
+
+        # group the data by city, use an apply function to find the row with the highest temperature
+        output_df = (
+            df_birthyear.groupby("city")
+            .apply(lambda x: x.loc[x["temperature_2m_max"].idxmax()])
+            .reset_index(drop=True)
+        )
+
+        # rename columns
+        output_df.columns = [
+            "Date hottest day",
+            "°C hottest day",
+            "City",
+            "lat",
+            "long",
+        ]
+
+        # select columns shown in output table
+        output_df = output_df[["Date hottest day", "City", "°C hottest day"]]
+
+        # saving the output_df to a new table
+        cursor.sql(
+            f"CREATE OR REPLACE TABLE {output_table_name} AS SELECT * FROM output_df"
+        )
+        cursor.sql(f"INSERT INTO {output_table_name} SELECT * FROM output_df")
+        cursor.close()
+
     find_hottest_day_birthyear(
-        in_table=Table(
-            name=c.IN_HISTORICAL_WEATHER_TABLE_NAME, conn_id=gv.CONN_ID_DUCKDB
-        ),
+        duckdb_conn_id=gv.CONN_ID_DUCKDB,
+        input_table_name=c.IN_HISTORICAL_WEATHER_TABLE_NAME,
         birthyear=uv.BIRTH_YEAR,
-        output_table=Table(
-            name=c.REPORT_HOT_DAYS_TABLE_NAME, conn_id=gv.CONN_ID_DUCKDB
-        ),
+        output_table_name=c.REPORT_HOT_DAYS_TABLE_NAME,
     )
 
 

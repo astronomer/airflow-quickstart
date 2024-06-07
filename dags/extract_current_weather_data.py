@@ -77,7 +77,7 @@ def extract_current_weather_data():
         duckdb_conn_id: str, current_weather_table_name: str, current_weather: list
     ):
         """
-        Convert the JSON input with info about the current weather into a pandas 
+        Convert the JSON input with info about the current weather into a pandas
         DataFrame and load it into DuckDB.
         Args:
             duckdb_conn_id (str): The connection ID for the DuckDB connection.
