@@ -7,3 +7,15 @@ services:
       - "8501:8501"
     volumes:
       - ./include:/app/include
+  scheduler:
+    extra_hosts:
+      - "localhost:host-gateway"
+  webserver:
+    extra_hosts:
+      - "localhost:host-gateway"
+  triggerer:
+    extra_hosts:
+      - "localhost:host-gateway"
+  postgres:
+    extra_hosts:
+      - "localhost:host-gateway"
