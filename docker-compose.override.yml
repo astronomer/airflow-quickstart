@@ -9,15 +9,13 @@ services:
       - ./include:/app/include
   scheduler:
     extra_hosts:
-      - "0.0.0.0:host-gateway"
+      - "localhost:0.0.0.0"
   webserver:
-    ports:
-      - "0.0.0.0:8080"
     extra_hosts:
-      - "0.0.0.0:host-gateway"
+      - "localhost:0.0.0.0"
   triggerer:
     extra_hosts:
-      - "0.0.0.0:host-gateway"
+      - "localhost:0.0.0.0"
   postgres:
     extra_hosts:
-      - "0.0.0.0:host-gateway"
+      - "localhost:0.0.0.0"
