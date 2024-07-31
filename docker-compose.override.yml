@@ -7,15 +7,3 @@ services:
       - "8501:8501"
     volumes:
       - ./include:/app/include
-  scheduler:
-    extra_hosts:
-      - "localhost:0.0.0.0"
-  webserver:
-    extra_hosts:
-      - "localhost:0.0.0.0"
-  triggerer:
-    extra_hosts:
-      - "localhost:0.0.0.0"
-  postgres:
-    extra_hosts:
-      - "localhost:0.0.0.0"
