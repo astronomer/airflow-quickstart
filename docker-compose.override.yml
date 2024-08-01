@@ -9,13 +9,13 @@ services:
       - ./include:/app/include
   scheduler:
     extra_hosts:
-      - "localhost:host-gateway"
+      - "host.docker.internal:host-gateway"
   webserver:
     extra_hosts:
-      - "localhost:host-gateway"
+      - "host.docker.internal:host-gateway"
   triggerer:
     extra_hosts:
-      - "localhost:host-gateway"
+      - "host.docker.internal:host-gateway"
   postgres:
     extra_hosts:
-      - "localhost:host-gateway"
+      - "host.docker.internal:host-gateway"
