@@ -3,17 +3,17 @@ Overview
 
 Welcome to this hands-on repository to get started with [Apache Airflow](https://airflow.apache.org/)! :rocket:
 
-This repository contains a simple Airflow pipeline following an ELT pattern, that can be run in GitHub codespaces (or locally with the [Astro CLI](https://docs.astronomer.io/astro/cli/install-cli)). The pipeline will ingest climate data from a csv file, as well local weather data from an API to create interactive visualizations of temperature changes over time. 
+This repository contains a simple Airflow pipeline following an ELT pattern that you can run in GitHub codespaces or locally with the [Astro CLI](https://docs.astronomer.io/astro/cli/install-cli). Your pipeline will ingest climate data from a csv file and local weather data from an API to create interactive visualizations of temperature changes over time.
 
-This is accomplished by using a set of tools in six Airflow DAGs:
+Your pipeline will accomplish this using six Airflow DAGs and the following tools:
 
-- The [Astro Python SDK](https://astro-sdk-python.readthedocs.io/en/stable/index.html) is used for ELT operations.
-- [DuckDB](https://duckdb.org/), a relational database, is used to store tables of the ingested data as well as the resulting tables after transformations.
-- [Streamlit](https://streamlit.io/), a python package to create interactive apps is used to display the data as a dashboard. The streamlit app retrieves its data from tables in DuckDB.
+- The [Astro Python SDK](https://astro-sdk-python.readthedocs.io/en/stable/index.html) for ELT operations.
+- [DuckDB](https://duckdb.org/), a relational database, for storing tables of the ingested data as well as the resulting tables after transformations.
+- [Streamlit](https://streamlit.io/), a Python package for creating interactive apps, for displaying the data as a dashboard. The Streamlit app will retrieve its data from tables in DuckDB.
 
-All tools used are open source and no additional accounts are needed.
+All tools used are open source, so you will not need to create additional accounts.
 
-After completing all tasks the streamlit app will look similar to the following screenshots:
+After completing all tasks, the Streamlit app will look similar to the following screenshots:
 
 ![Finished Streamlit App Part 1](src/streamlit_result_1.png)
 ![Finished Streamlit App Part 2](src/streamlit_result_2.png)
@@ -55,16 +55,16 @@ How to use this repository
 Run this Airflow project without installing anything locally.
 
 1. Fork this repository.
-2. Create a new GitHub codespaces project on your fork. Make sure it uses at least 4 cores!
+2. Create a new GitHub Codespaces project on your fork. Make sure it uses at least 4 cores!
 
-    ![Fork repo and create a codespaces project](src/fork_and_codespaces.png)
-
-3. After creating the codespaces project the Astro CLI will automatically start up all necessary Airflow components as well as the streamlit app. This can take a few minutes. 
-4. Once the Airflow project has started access the Airflow UI by clicking on the **Ports** tab and opening the forward URL for port 8080.
+    ![Fork repo and create a Codespaces project](src/fork_and_codespaces.png)
+3. Run this command in the Codespaces terminal: `bash ./.devcontainer/post_creation_script.sh`.
+4. The Astro CLI will automatically start up all necessary Airflow components as well as the streamlit app. This can take a few minutes. 
+5. Once the Airflow project has started, access the Airflow UI by clicking on the **Ports** tab and opening the forward URL for port 8080.
 
     ![Open Airflow UI URL Codespaces](src/open_airflow_ui_codespaces.png)
 
-5. Once the streamlit app is running you can access it by by clicking on the **Ports** tab and opening the forward URL for port 8501.
+6. Once the Streamlit app is running, you can access it by by clicking on the **Ports** tab and opening the forward URL for port 8501.
 
 ## Option 2: Use the Astro CLI
 
@@ -74,7 +74,7 @@ Download the [Astro CLI](https://docs.astronomer.io/astro/cli/install-cli) to ru
 2. Install the Astro CLI by following the steps in the [Astro CLI documentation](https://docs.astronomer.io/astro/cli/install-cli). Docker Desktop/Docker Engine is a prerequisite, but you don't need in-depth Docker knowledge to run Airflow with the Astro CLI.
 3. Run `astro dev start` in your cloned repository.
 4. After your Astro project has started. View the Airflow UI at `localhost:8080`.
-5. View the streamlit app at `localhost:8501`. NOTE: The streamlit container can take a few minutes to start up.
+5. View the Streamlit app at `localhost:8501`. NOTE: The Streamlit container can take a few minutes to start up.
 
 # Run the project
 
@@ -83,7 +83,7 @@ Download the [Astro CLI](https://docs.astronomer.io/astro/cli/install-cli) to ru
 All DAGs tagged with `part_1` are part of a pre-built, fully functional Airflow pipeline. To run them:
 
 1. Go to `include/global_variables/user_input_variables.py` and enter your own info for `MY_NAME` and `MY_CITY`.
-2. Unpause all DAGs that are tagged with `part_1` by clicking on the toggle on their left hand side. Once the `start` DAG is unpaused it will run once, starting the pipeline. You can also run this DAG manually to trigger further pipeline runs by clicking on the play button on the right side of the DAG.
+2. Trigger the `start` DAG and unpause all DAGs that are tagged with `part_1` by clicking on the toggle on their lefthand side. Once the `start` DAG is unpaused, it will run once, starting the pipeline. You can also run this DAG manually to trigger further pipeline runs by clicking on the play button on the right side of the DAG.
 
     The DAGs that will run are:
 
@@ -92,15 +92,15 @@ All DAGs tagged with `part_1` are part of a pre-built, fully functional Airflow 
     - `in_climate_data`
     - `transform_climate_data`
 
-3. Watch the DAGs run according to their dependencies which have been set using [Datasets](https://docs.astronomer.io/learn/airflow-datasets).
+3. Watch the DAGs run according to their dependencies, which have been set using [Datasets](https://docs.astronomer.io/learn/airflow-datasets).
 
     ![Dataset and DAG Dependencies](src/part_1_dataset_dependencies.png)
 
-4. Open the Streamlit app. If you are using codespaces go to the **Ports** tab and open the URL of the forwarded port `8501`. If you are running locally go to `localhost:8501`.
+4. Open the Streamlit app. If you are using Codespaces, go to the **Ports** tab and open the URL of the forwarded port `8501`. If you are running locally go to `localhost:8501`.
 
     ![Open Streamlit URL Codespaces](src/open_streamlit_codespaces.png)
 
-5. View the Streamlit app now showing global climate data and the current weather for your city.
+5. View the Streamlit app, now showing global climate data and the current weather for your city.
 
     ![Streamlit app](src/part_1_streamlit_app.png)
 
@@ -122,27 +122,27 @@ Use Datasets to make:
 
 You can find information about how to use the Datasets feature in [this guide](https://docs.astronomer.io/learn/airflow-datasets). See also the [documentation on how the Astro Python SDK interacts with Datasets](https://astro-sdk-python.readthedocs.io/en/stable/guides/concepts.html#datasets).
 
-After running the two DAGs in order, view your streamlit app. You will now see a graph with hot days per year. Additionally parts of the historical weather table will be printed out.
+After running the two DAGs in order, view your Streamlit app. You will now see a graph with hot days per year. Additionally, parts of the historical weather table will be printed out.
 
 ![Streamlit app](src/part_2_midway_state_streamlit.png)
 
 ### Exercise 2 - Dynamic Task Mapping
 
-The tasks in the `extract_historical_weather_data` currently only retrieve historical weather information for one city. Use dynamic task mapping to retrieve information for 3 cities.
+The tasks in the `extract_historical_weather_data` currently only retrieve historical weather information for one city. Use dynamic task mapping to retrieve information for three cities.
 
 You can find instructions on how to use dynamic task mapping in [this guide](https://docs.astronomer.io/learn/dynamic-tasks). Tip: You only need to modify two lines of code!
 
-After completing the exercise rerun both `extract_historical_weather_data` and `transform_historical_weather_data`.
+After completing the exercise, rerun both `extract_historical_weather_data` and `transform_historical_weather_data`.
 
-In your streamlit app you can now select the different cities from the dropdown box to see how many hot days they had per year.
+In your Streamlit app, you can now select the different cities from the dropdown box to see how many hot days they had per year.
 
 ![Streamlit app](src/part_2_streamlit_dropdown.png)
 
 ### Exercise 3 - Astro Python SDK
 
-The Astro Python SDK is an open source package built on top of Airflow to provide you with functions and classes that simplify common ELT and ETL operations such as loading files or using SQL or pandas to transform data in a database-agnostic way. View the [Astro Python SDK documentation](https://astro-sdk-python.readthedocs.io/en/stable/index.html) for more information. 
+The Astro Python SDK is an open-source package built on top of Airflow to provide you with functions and classes that simplify common ELT and ETL operations such as loading files or using SQL or Pandas to transform data in a database-agnostic way. View the [Astro Python SDK documentation](https://astro-sdk-python.readthedocs.io/en/stable/index.html) for more information. 
 
-The `transform_historical_weather_data` uses the `aql.dataframe` decorator to use Pandas to transform data. The table returned by the `find_hottest_day_birthyear` task will be printed out at the end of your streamlit app. By default no transformation is made to the table in the task, let's change that!
+The `transform_historical_weather_data` uses the `aql.dataframe` decorator to use Pandas to transform data. The table returned by the `find_hottest_day_birthyear` task will be printed out at the end of your Streamlit app. By default, no transformation is made to the table in the task, so let's change that!
 
 ```python
 @aql.dataframe(pool="duckdb")
@@ -160,9 +160,9 @@ def find_hottest_day_birthyear(in_table: pd.DataFrame, birthyear: int):
     return output_df
 ```
 
-Use pandas to transform the data shown in `in_table` to search for the hottest day in your birthyear for each city you retrieved data for.
+Use Pandas to transform the data shown in `in_table` to search for the hottest day in your birthyear for each city for which you retrieved data.
 
-Tip: Both, the `in_table` dataframe and the `output_df` dataframe are printed to the logs of the `find_hottest_day_birthyear` task. The goal is to have an output like in the screenshot shown below. If your table does not contain information for several cities, make sure you completed exercise 2 correctly.
+Tip: Both, the `in_table` dataframe and the `output_df` dataframe are printed to the logs of the `find_hottest_day_birthyear` task. The goal is to have an output as in the screenshot below. If your table does not contain information for several cities, make sure you completed exercise 2 correctly.
 
 ![Streamlit app](src/part_2_hottest_day_output.png)
 
@@ -173,20 +173,20 @@ How it works
 
 ## Components and infrastructure
 
-This repository uses a [custom codespaces container](https://github.com/astronomer/devcontainer-features/pkgs/container/devcontainer-features%2Fastro-cli) to install the [Astro CLI](https://docs.astronomer.io/astro/cli/install-cli). The GH codespaces post creation command will start up the Astro project by running `astro dev start`. 
+This repository uses a [custom codespaces container](https://github.com/astronomer/devcontainer-features/pkgs/container/devcontainer-features%2Fastro-cli) to install the [Astro CLI](https://docs.astronomer.io/astro/cli/install-cli) and forward ports. 
 
-5 Docker containers will be created and relevant ports will be forwarded:
+5 Docker containers will be created and relevant ports will be forwarded for:
 
 - The Airflow scheduler
 - The Airflow webserver
 - The Airflow metastore
 - The Airflow triggerer
 
-Additionally when using codespaces, the command to run the streamlit app is automatically run upon starting the environment.
+Additionally, when using codespaces, the command to run the Streamlit app is automatically run upon starting the environment.
 
 ## Data sources
 
-The global climate data in the local CSV file was retrieved from the [Climate Change: Earth Surface Temperature Data Kaggle dataset](https://www.kaggle.com/datasets/berkeleyearth/climate-change-earth-surface-temperature-data) by Berkely Earth and Kristen Sissener which was uploaded under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).
+The global climate data in the local CSV file was retrieved from the [Climate Change: Earth Surface Temperature Data Kaggle dataset](https://www.kaggle.com/datasets/berkeleyearth/climate-change-earth-surface-temperature-data) by Berkely Earth and Kristen Sissener, which was uploaded under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).
 
 The current and historical weather data is queried from the [Open Meteo API](https://open-meteo.com/) ([CC BY 4.0](https://creativecommons.org/licenses/by/4.0)).
 

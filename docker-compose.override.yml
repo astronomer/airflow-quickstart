@@ -18,4 +18,4 @@ services:
       - "host.docker.internal:host-gateway"
   postgres:
     extra_hosts:
-      - "host.docker.internal:host-gateway" 
+      - "host.docker.internal:host-gateway"

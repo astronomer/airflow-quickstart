@@ -1,6 +1,7 @@
-airflow-provider-duckdb==0.0.2
-astro-sdk-python==1.5.0
-duckdb==0.7.1
-minio==7.1.13
-pandas==1.5.3
-streamlit==1.23.0
+airflow-provider-duckdb==0.2.0
+astro-sdk-python==1.8.1
+duckdb==1.0.0
+minio==7.2.7
+pandas<2.2.0
+streamlit==1.37.0
+numpy==1.26.4
