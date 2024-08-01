@@ -1,15 +1,29 @@
 {
   "image": "mcr.microsoft.com/devcontainers/universal:2",
   "features": {
-      "ghcr.io/astronomer/devcontainer-features/astro-cli:1": {"version":"v1.28.1"}
+      "ghcr.io/astronomer/devcontainer-features/astro-cli:1": {
+      "version":"v1.28.1"
+    }
   },
-  "forwardPorts": [8080, 8501],
+  "forwardPorts": [8080, 8501, 9000, 9001, 9090, 5432],
   "portsAttributes": {
     "8080": {
       "label": "webserver"
     },
     "8501": {
       "label": "streamlit"
+    },
+    "9000": {
+      "label": "minio"
+    },
+    "9001": {
+      "label": ""
+    },
+    "9090": {
+      "label": ""
+    },
+    "5432": {
+      "label": "postgres"
     }
   }
 }
