@@ -3,7 +3,6 @@
   "features": {
       "ghcr.io/astronomer/devcontainer-features/astro-cli:1": {"version":"v1.28.1"}
   },
-  "postCreateCommand": "bash ./.devcontainer/post_creation_script.sh",
   "forwardPorts": [8080, 8501],
   "portsAttributes": {
     "8080": {
@@ -14,4 +13,3 @@
     }
   }
 }
-
