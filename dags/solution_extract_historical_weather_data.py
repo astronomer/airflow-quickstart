@@ -123,6 +123,14 @@ def solution_extract_historical_weather_data():
         else:
             historical_weather_df = pd.DataFrame(historical_weather)
 
+        # DEBUG: Check the structure of historical_weather_df
+        print("Historical Weather DataFrame Structure:")
+        print(historical_weather_df.dtypes)
+        print(historical_weather_df.head())
+
+        # Flatten any nested structures if necessary
+        historical_weather_df = historical_weather_df.applymap(lambda x: str(x) if isinstance(x, (list, dict)) else x)
+
         duckdb_conn = DuckDBHook(duckdb_conn_id).get_conn()
         cursor = duckdb_conn.cursor()
         cursor.sql(
