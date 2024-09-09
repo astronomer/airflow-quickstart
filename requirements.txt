@@ -5,3 +5,5 @@ minio==7.2.7
 pandas<2.2.0
 streamlit==1.37.0
 numpy==1.26.4
+apache-airflow-providers-snowflake==5.7.0
+snowflake-connector-python
