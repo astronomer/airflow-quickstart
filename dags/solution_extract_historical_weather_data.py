@@ -128,8 +128,17 @@ def solution_extract_historical_weather_data():
         print(historical_weather_df.dtypes)
         print(historical_weather_df.head())
 
-        # Flatten any nested structures if necessary
-        historical_weather_df = historical_weather_df.applymap(lambda x: str(x) if isinstance(x, (list, dict)) else x)
+        # Flatten any nested dictionary columns
+        for col in historical_weather_df.columns:
+            historical_weather_df[col] = flatten_column(historical_weather_df[col])
+
+        # After flattening, make sure each list entry is exploded into rows if necessary
+        historical_weather_df = historical_weather_df.apply(lambda col: col.explode() if isinstance(col.iloc[0], list) else col)
+
+        # DEBUG: Check the DataFrame after flattening
+        print("Flattened DataFrame Structure:")
+        print(historical_weather_df.dtypes)
+        print(historical_weather_df.head())
 
         duckdb_conn = DuckDBHook(duckdb_conn_id).get_conn()
         cursor = duckdb_conn.cursor()
