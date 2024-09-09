@@ -112,6 +112,15 @@ def solution_extract_historical_weather_data():
         """
         from duckdb_provider.hooks.duckdb_hook import DuckDBHook
 
+        # Define the flatten_column function first
+        def flatten_column(column):
+            """
+            Flatten a dictionary column into a list of values.
+            """
+            if isinstance(column.iloc[0], dict):
+                return column.apply(lambda x: list(x.values()))
+            return column
+
         if type(historical_weather) == list:
             list_of_df = []
 
