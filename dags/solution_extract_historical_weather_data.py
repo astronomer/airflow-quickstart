@@ -91,7 +91,7 @@ def solution_extract_historical_weather_data():
     # Tip: This task can be accomplished by using Dynamic Task Mapping.
 
     # SOLUTION: Map both tasks using .expand. Note that the city input has to be a list of cities!
-    coordinates = get_lat_long_for_city.expand(city=["Bern", "Basel", "Zurich"])
+    coordinates = get_lat_long_for_city.expand(city=["Bern", "Basel", "Zurich", "Abu Dhabi"])
     historical_weather = get_historical_weather.expand(coordinates=coordinates)
 
     @task(
