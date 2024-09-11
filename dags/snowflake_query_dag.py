@@ -11,7 +11,7 @@ default_args = {
 dag = DAG(
     'snowflake_query',
     default_args=default_args,
-    description='Run a simple query in Snowflake',
+    description='Run a simple query in Snowflake for testing',
     schedule_interval=None,
     start_date=days_ago(1),
     tags=['example'],
