@@ -54,6 +54,9 @@ start_dataset = Dataset("start")
     tags=["part_2"], # add tags in the UI
     # render Jinja templates as native objects (e.g. dictionary) instead of strings
     render_template_as_native_obj=True,
+    # Warning - in-memory DuckDB is not a persistent database between workers. To move this workflow in production, use a 
+    # cloud-based database and based on concurrency capabilities adjust the parameter below.
+    concurrency=1, # only allow a single task execution at a time, prevents parallel DuckDB calls
 )
 def extract_historical_weather_data(): # by default the dag_id is the name of the decorated function
 

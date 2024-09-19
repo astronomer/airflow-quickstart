@@ -17,7 +17,7 @@ from include.global_variables import constants as c
 t_log = logging.getLogger("airflow.task")
 
 # ------------------- #
-# Datasets Definition #
+# Dataset Definition #
 # ------------------- #
 
 start_dataset = Dataset("start")
@@ -37,7 +37,7 @@ start_dataset = Dataset("start")
     doc_md=__doc__,  # add DAG Docs in the UI, see https://www.astronomer.io/docs/learn/custom-airflow-ui-docs-tutorial
     default_args=gv.default_args, # default_args are applied to all tasks in a DAG
     description="Loads historic climate data form local storage to DuckDB.",
-    tags=["part_1"],
+    tags=["part_1"], # add tags in the UI
     # render Jinja templates as native objects (e.g. dictionary) instead of strings
     render_template_as_native_obj=True,
     # Warning - in-memory DuckDB is not a persistent database between workers. To move this workflow in production, use a 
