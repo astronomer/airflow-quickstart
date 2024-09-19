@@ -8,9 +8,7 @@ from airflow.decorators import dag, task
 from airflow.datasets import Dataset
 from pendulum import datetime
 import pandas as pd
-
-# import tools from the Astro SDK
-from astro import sql as aql
+from airflow.io.path import ObjectStoragePath
 
 # -------------------- #
 # Local module imports #
@@ -27,23 +25,13 @@ from include.meterology_utils import (
 # DAG #
 # --- #
 
-
-@aql.dataframe(pool="duckdb")
-def turn_json_into_table(in_json):
-    """Converts the list of JSON input into one pandas dataframe."""
-    if type(in_json) == dict:
-        df = pd.DataFrame(in_json)
-    else:
-        df = pd.concat([pd.DataFrame(d) for d in in_json], ignore_index=True)
-    return df
-
-
 # ---------- #
 # Exercise 1 #
 # ---------- #
 # Schedule this DAG to run as soon as the 'start' DAG has finished running.
 # Tip: Look at how the 'extract_current_weather_data' DAG is scheduled.
 
+start_dataset = Dataset("start")
 
 @dag(
     start_date=datetime(2023, 1, 1),
@@ -104,8 +92,9 @@ def extract_historical_weather_data():
             historical_weather (list): The historical weather data to load into DuckDB.
         """
         from duckdb_provider.hooks.duckdb_hook import DuckDBHook
+        from airflow.models.xcom import LazyXComAccess
 
-        if type(historical_weather) == list:
+        if type(historical_weather) == LazyXComAccess:
             list_of_df = []
 
             for item in historical_weather:
@@ -119,10 +108,10 @@ def extract_historical_weather_data():
         duckdb_conn = DuckDBHook(duckdb_conn_id).get_conn()
         cursor = duckdb_conn.cursor()
         cursor.sql(
-            f"CREATE TABLE IF NOT EXISTS {historical_weather_table_name} AS SELECT * FROM historical_weather_df"
+            f"CREATE TABLE IF NOT EXISTS {historical_weather_table_name} AS SELECT * FROM historical_weather_df;"
         )
         cursor.sql(
-            f"INSERT INTO {historical_weather_table_name} SELECT * FROM historical_weather_df"
+            f"INSERT INTO {historical_weather_table_name} SELECT * FROM historical_weather_df;"
         )
         cursor.close()
 

@@ -7,7 +7,6 @@ This repository contains a simple Airflow pipeline following an ELT pattern that
 
 Your pipeline will accomplish this using six Airflow DAGs and the following tools:
 
-- The [Astro Python SDK](https://astro-sdk-python.readthedocs.io/en/stable/index.html) for ELT operations.
 - [DuckDB](https://duckdb.org/), a relational database, for storing tables of the ingested data as well as the resulting tables after transformations.
 - [Streamlit](https://streamlit.io/), a Python package for creating interactive apps, for displaying the data as a dashboard. The Streamlit app will retrieve its data from tables in DuckDB.
 
@@ -27,13 +26,13 @@ The ready to run Airflow pipeline consists of 4 DAGs and will:
 
 - Retrieve the current weather for your city from an API.
 - Ingest climate data from a local CSV file.
-- Load the data into DuckDB using the Astro SDK.
-- Run a transformation on the data using the Astro SDK to create a reporting table powering a Streamlit App.
+- Load the data into DuckDB.
+- Run a transformation on the data to create a reporting table powering a Streamlit app.
 
 ## Part 2: Exercises
 
-Follow the [Part 2 Instructions](#part-2-instructions-exercises) to extend the pipeline to show historical weather data for cities of your choice in the Streamlit App.
-During this process you will learn about Airflow features like [Datasets](https://docs.astronomer.io/learn/airflow-datasets), [dynamic task mapping](https://docs.astronomer.io/learn/dynamic-tasks) and the [Astro Python SDK](https://docs.astronomer.io/learn/astro-python-sdk).
+Follow the [Part 2 Instructions](#part-2-instructions-exercises) to extend the pipeline to show historical weather data for cities of your choice in the Streamlit app.
+During this process you will learn about Airflow features including [Datasets](https://docs.astronomer.io/learn/airflow-datasets) and [dynamic task mapping](https://docs.astronomer.io/learn/dynamic-tasks).
 
 ## Part 3: Play with it!
 
@@ -41,7 +40,7 @@ Use this repository to explore Airflow best practices, experiment with your own 
 
 This project was created with :heart: by [Astronomer](https://www.astronomer.io/).
 
-> If you are looking for an entry level written tutorial where you build your own DAG from scratch check out: [Get started with Apache Airflow, Part 1: Write and run your first DAG](https://docs.astronomer.io/learn/get-started-with-airflow).
+> If you are looking for an entry-level written tutorial where you build your own DAG from scratch, check out: [Get started with Apache Airflow, Part 1: Write and run your first DAG](https://docs.astronomer.io/learn/get-started-with-airflow).
 
 -------------------------------
 
@@ -59,7 +58,7 @@ Run this Airflow project without installing anything locally.
 
     ![Fork repo and create a Codespaces project](src/fork_and_codespaces.png)
 3. Run this command in the Codespaces terminal: `bash ./.devcontainer/post_creation_script.sh`.
-4. The Astro CLI will automatically start up all necessary Airflow components as well as the streamlit app. This can take a few minutes. 
+4. The Astro CLI will automatically start up all necessary Airflow components as well as the Streamlit app. This can take a few minutes. 
 5. Once the Airflow project has started, access the Airflow UI by clicking on the **Ports** tab and opening the forward URL for port 8080.
 
     ![Open Airflow UI URL Codespaces](src/open_airflow_ui_codespaces.png)
@@ -120,7 +119,7 @@ Use Datasets to make:
 - `extract_historical_weather_data` run after the `start` DAG has finished
 - `transform_historical_weather_data` run after the `extract_historical_weather_data` DAG has finished
 
-You can find information about how to use the Datasets feature in [this guide](https://docs.astronomer.io/learn/airflow-datasets). See also the [documentation on how the Astro Python SDK interacts with Datasets](https://astro-sdk-python.readthedocs.io/en/stable/guides/concepts.html#datasets).
+You can find information about how to use the Datasets feature in [this guide](https://docs.astronomer.io/learn/airflow-datasets).
 
 After running the two DAGs in order, view your Streamlit app. You will now see a graph with hot days per year. Additionally, parts of the historical weather table will be printed out.
 
@@ -138,27 +137,9 @@ In your Streamlit app, you can now select the different cities from the dropdown
 
 ![Streamlit app](src/part_2_streamlit_dropdown.png)
 
-### Exercise 3 - Astro Python SDK
+### Exercise 3 - Transformation Using Pandas
 
-The Astro Python SDK is an open-source package built on top of Airflow to provide you with functions and classes that simplify common ELT and ETL operations such as loading files or using SQL or Pandas to transform data in a database-agnostic way. View the [Astro Python SDK documentation](https://astro-sdk-python.readthedocs.io/en/stable/index.html) for more information. 
-
-The `transform_historical_weather_data` uses the `aql.dataframe` decorator to use Pandas to transform data. The table returned by the `find_hottest_day_birthyear` task will be printed out at the end of your Streamlit app. By default, no transformation is made to the table in the task, so let's change that!
-
-```python
-@aql.dataframe(pool="duckdb")
-def find_hottest_day_birthyear(in_table: pd.DataFrame, birthyear: int):
-    # print ingested df to the logs
-    gv.task_log.info(in_table)
-
-    output_df = in_table
-
-    ####### YOUR TRANSFORMATION ##########
-
-    # print result table to the logs
-    gv.task_log.info(output_df)
-
-    return output_df
-```
+The table returned by the `find_hottest_day_birthyear` task will be displayed by your Streamlit app. By default, no transformation is made to the input table in the task, so let's change that!
 
 Use Pandas to transform the data shown in `in_table` to search for the hottest day in your birthyear for each city for which you retrieved data.
 
@@ -182,7 +163,7 @@ This repository uses a [custom codespaces container](https://github.com/astronom
 - The Airflow metastore
 - The Airflow triggerer
 
-Additionally, when using codespaces, the command to run the Streamlit app is automatically run upon starting the environment.
+Additionally, when using Codespaces, the command to run the Streamlit app is automatically run upon starting the environment.
 
 ## Data sources
 

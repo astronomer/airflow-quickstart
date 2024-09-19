@@ -9,10 +9,6 @@ from airflow.datasets import Dataset
 from pendulum import datetime
 import pandas as pd
 
-# import tools from the Astro SDK
-from astro import sql as aql
-from astro.sql.table import Table
-
 # -------------------- #
 # Local module imports #
 # -------------------- #
@@ -20,26 +16,6 @@ from astro.sql.table import Table
 from include.global_variables import airflow_conf_variables as gv
 from include.global_variables import user_input_variables as uv
 from include.global_variables import constants as c
-
-# ----------------- #
-# Astro SDK Queries #
-# ----------------- #
-
-
-# Create a reporting table that counts heat days per year for each city location
-@aql.transform(pool="duckdb")
-def create_historical_weather_reporting_table(in_table: Table, hot_day_celsius: float):
-    return """
-        SELECT time, city, temperature_2m_max AS day_max_temperature,
-        SUM(
-            CASE
-            WHEN CAST(temperature_2m_max AS FLOAT) >= {{ hot_day_celsius }} THEN 1
-            ELSE 0
-            END
-        ) OVER(PARTITION BY city, YEAR(CAST(time AS DATE))) AS heat_days_per_year
-        FROM {{ in_table }}
-    """
-
 
 # --- #
 # DAG #
@@ -49,7 +25,7 @@ def create_historical_weather_reporting_table(in_table: Table, hot_day_celsius: 
 # Exercise 1 #
 # ---------- #
 # Schedule this DAG to run as soon as the 'extract_historical_weather_data' DAG has finished running.
-# Tip: You will need to use the dataset feature.
+# Tip: You will need to use the Dataset feature.
 
 
 @dag(
@@ -63,20 +39,30 @@ def create_historical_weather_reporting_table(in_table: Table, hot_day_celsius: 
 )
 def solution_transform_historical_weather():
 
+    @task(
+        outlets=[Dataset("duckdb://include/dwh/historical_weather_data")],
+    )
+    def create_historical_weather_reporting_table(duckdb_conn_id: str, in_table: str, hot_day_celsius: float):
+        
+        from duckdb_provider.hooks.duckdb_hook import DuckDBHook
+
+        duckdb_conn = DuckDBHook(duckdb_conn_id).get_conn()
+        cursor = duckdb_conn.cursor()
+        cursor.sql(
+            f"SELECT time, city, temperature_2m_max AS day_max_temperature, SUM(CASE WHEN CAST(temperature_2m_max AS FLOAT) >= {hot_day_celsius} THEN 1 ELSE 0 END) OVER(PARTITION BY city, YEAR(CAST(time AS DATE))) AS heat_days_per_year FROM {in_table};"
+        )
+        cursor.close()
+
     create_historical_weather_reporting_table(
-        in_table=Table(
-            name=c.IN_HISTORICAL_WEATHER_TABLE_NAME, conn_id=gv.CONN_ID_DUCKDB
-        ),
-        hot_day_celsius=uv.HOT_DAY,
-        output_table=Table(
-            name=c.REPORT_HISTORICAL_WEATHER_TABLE_NAME, conn_id=gv.CONN_ID_DUCKDB
-        ),
+        duckdb_conn_id=gv.CONN_ID_DUCKDB, 
+        in_table=c.IN_HISTORICAL_WEATHER_TABLE_NAME, 
+        hot_day_celsius=uv.HOT_DAY
     )
 
     # ---------- #
     # Exercise 3 #
     # ---------- #
-    # One possible solution of using pandas to find the hottest day of the year
+    # One possible solution of using Pandas to find the hottest day of the year
     # for a given birth year.
 
     @task(
