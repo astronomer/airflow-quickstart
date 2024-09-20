@@ -1,11 +1,8 @@
-<p align="center">
-  <a href="https://astronomer.io">
-    <img src="https://www.astronomer.io/monogram/astronomer-monogram-RGB-600px.png" height="96">
-    <h3 align="center">Astronomer Templates</h3>
-  </a>
-</p>
+# [Apache Airflow®](https://airflow.apache.org/) Quickstart
 
-Welcome to the Astronomer Templates repository! Launch your journey with Airflow by signing up for a trial at astronomer.io! If you've already created a trial and have cloned this repository, check out your chosen template in the table of contents.
+Welcome to the Astronomer's Apache Airflow Quickstart repository!
+
+Launch your journey with Airflow by signing up for a trial at astronomer.io! If you've already created a trial and have cloned this repository, check out your chosen quickstart in the table of contents.
 
 ## Table of Contents
 
@@ -21,7 +18,7 @@ These templates are designed to help new users learn and try Airflow quickly. As
 
 ## Run a Template Locally
 
-1. Navigate to your chosen project by selecting an option in the table of contents above
+1. Navigate to your chosen project by selecting an option in the table of contents above.
 
 2. Start Airflow on your local machine by running 'astro dev start'.
 
