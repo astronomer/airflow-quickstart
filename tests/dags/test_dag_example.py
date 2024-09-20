@@ -1,4 +1,4 @@
-"""Test the validity of all DAGs. This test ensures that all Dags have tags, retries set to two, and no import errors. Feel free to add and remove tests."""
+"""Example DAGs test. This test ensures that all Dags have tags, retries set to two, and no import errors. This is an example pytest and may not be fit the context of your DAGs. Feel free to add and remove tests."""
 
 import os
 import logging
@@ -28,7 +28,7 @@ def get_import_errors():
         def strip_path_prefix(path):
             return os.path.relpath(path, os.environ.get("AIRFLOW_HOME"))
 
-        # we prepend "(None,None)" to ensure that a test object is always created even if its a no op.
+        # prepend "(None,None)" to ensure that a test object is always created even if it's a no op.
         return [(None, None)] + [
             (strip_path_prefix(k), v.strip()) for k, v in dag_bag.import_errors.items()
         ]
@@ -80,4 +80,4 @@ def test_dag_retries(dag_id, dag, fileloc):
     """
     assert (
         dag.default_args.get("retries", None) >= 2
-    ), f"{dag_id} in {fileloc} does not have retries not set to 2."
+    ), f"{dag_id} in {fileloc} must have task retries >= 2."

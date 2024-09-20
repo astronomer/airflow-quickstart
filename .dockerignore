@@ -3,4 +3,6 @@ astro
 .env
 airflow_settings.yaml
 logs/
-__pycache__
+.venv
+airflow.db
+airflow.cfg
