@@ -27,17 +27,6 @@ from include.custom_functions.galaxy_functions import get_galaxy_data
 # Use the Airflow task logger to log information to the task logs (or use print())
 t_log = logging.getLogger("airflow.task")
 
-# --------------------------------------------------------------------------- #
-# Exercise 1: Make an Airflow param customizable using an evironment variable #
-# --------------------------------------------------------------------------- #
-# Add an environment variable to allow a user to set a different value for the
-# `_CLOSENESS_THRESHOLD_LY_PARAMETER` while supplying a default value.
-# Hint 1: don't forget to replace the hard-coded value of 500000 currently being
-# passed to the `Param()` function in `params` in the DAG definition with the
-# environment variable.
-# Hint 2: you can use the same format for the environment variable as the one
-# used for `_NUM_GALAXIES_TOTAL`.
-
 # Define variables used in a DAG as environment variables in .env for your whole Airflow instance
 # to standardize your DAGs
 _DUCKDB_INSTANCE_NAME = os.getenv("DUCKDB_INSTANCE_NAME", "include/astronomy.db")
@@ -68,7 +57,7 @@ _NUM_GALAXIES_TOTAL = os.getenv("NUM_GALAXIES_TOTAL", 20)
     tags=["example", "ETL"],  # Add tags in the UI
     params={  # Airflow params can add interactive options on manual runs. See: https://www.astronomer.io/docs/learn/airflow-params
         _CLOSENESS_THRESHOLD_LY_PARAMETER_NAME: Param(
-            500000,
+            _CLOSENESS_THRESHOLD_LY_DEFAULT,
             type="number",
             title="Galaxy Closeness Threshold",
             description="Set how close galaxies need ot be to the milkyway in order to be loaded to DuckDB.",
@@ -79,7 +68,7 @@ _NUM_GALAXIES_TOTAL = os.getenv("NUM_GALAXIES_TOTAL", 20)
     concurrency=1, # allow only a single task execution at a time, prevents parallel DuckDB calls
     is_paused_upon_creation=False, # start running the DAG as soon as it's created
 )
-def example_etl_galaxies():  # By default, the dag_id is the name of the decorated function
+def example_etl_galaxies_solution():  # By default, the dag_id is the name of the decorated function
 
     # ---------------- #
     # Task Definitions #
@@ -217,9 +206,9 @@ def example_etl_galaxies():  # By default, the dag_id is the name of the decorat
         )
         t_log.info(tabulate(near_galaxies_df, headers="keys", tablefmt="pretty"))
 
-    # ------------- #
-    # Calling tasks #
-    # ------------- #
+    # ------------------------------------ #
+    # Calling tasks + Setting dependencies #
+    # ------------------------------------ #
 
     # Each call of a @task decorated function creates one task in the Airflow UI
     # passing the return value of one @task-decorated function to another one
@@ -229,17 +218,14 @@ def example_etl_galaxies():  # By default, the dag_id is the name of the decorat
     transform_galaxy_data_obj = transform_galaxy_data(extract_galaxy_data_obj)
     load_galaxy_data_obj = load_galaxy_data(transform_galaxy_data_obj)
 
-
-    # -------------------------------- #
-    # Exercise 2: Setting dependencies #
-    # -------------------------------- #
-
-    # You can set explicit dependencies using the chain function or bit-shift operators.
-    # Replace the bit-shift approach taken here with a chain function.
+    # You can set explicit dependencies using the chain function (or bit-shift operators)
     # See: https://www.astronomer.io/docs/learn/managing-dependencies
-
-    create_galaxy_table_in_duckdb_obj >> load_galaxy_data_obj >> print_loaded_galaxies()
+    chain(
+        create_galaxy_table_in_duckdb_obj,
+        load_galaxy_data_obj,
+        print_loaded_galaxies(),
+    )
 
 
 # Instantiate the DAG
-example_etl_galaxies()
+example_etl_galaxies_solution()
