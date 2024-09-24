@@ -62,19 +62,9 @@ def example_astronauts():
     # see: https://www.astronomer.io/docs/learn/airflow-decorators for information about @task
     # see: https://www.astronomer.io/docs/learn/what-is-an-operator for information about traditional operators
 
-    # ------------------------------------------------- #
-    # Exercise: Define this task as a Dataset producer. #
-    # ------------------------------------------------- #
-    # With Datasets, DAGs that access the same data can have explicit, visible 
-    # relationships, and DAGs can be scheduled based on updates to these datasets. 
-    # This feature helps make Airflow data-aware and expands Airflow scheduling 
-    # capabilities beyond time-based methods such as cron. Downstream DAGs can be 
-    # scheduled based on combinations of Dataset updates coming from tasks in the 
-    # same Airflow instance or calls to the Airflow API.
-    # To define this task as a producer of a Dataset, pass a Dataset object,
-    # encapsulated in a list, as an argument to the task's `outlets` parameter.
-    # For more guidance, see: https://www.astronomer.io/docs/learn/airflow-datasets
-    @task
+    @task(
+        outlets=[Dataset("current_astronauts")]
+    )
     def get_astronauts(**context) -> list[dict]:
         """
         This task uses the requests library to retrieve a list of Astronauts
