@@ -28,11 +28,11 @@ Your Astro project contains the following files and folders:
 
 # Exercises
 
-## Exercise 1:
+## Exercise 1
 
 - Make an Airflow param customizable using an evironment variable. See the `example_etl_galaxies` DAG for details.
 
-## Exercise 2:
+## Exercise 2
 
 - Replace the bit-shift operator approach to setting dependencies to a chain function. See the DAG for details.
 

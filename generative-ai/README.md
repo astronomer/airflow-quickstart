@@ -25,6 +25,10 @@ Your Astro project contains the following files and folders:
 - plugins: Add custom or community plugins for your project to this file. It is empty by default.
 - airflow_settings.yaml: Use this local-only file to specify Airflow Connections, Variables, and Pools instead of entering them in the Airflow UI as you develop DAGs in this project.
 
+# Exercise
+
+- Modularize the DAG. See the DAG file for detailed instructions.
+
 # Deploying to Production
 
 ### ❗Warning❗
