@@ -32,8 +32,8 @@ t_log = logging.getLogger("airflow.task")
 # ---------------------------------------------------------------------------- #
 # Complete an Airflow param that allows a user to set a value for the
 # `_CLOSENESS_THRESHOLD_LY_PARAMETER` variable on manual runs.
-# Hint 1: look for the environment variables below to find the relevant DAG parameter.
-# Hint 2: include a type, title, and description in the param.
+# Hint 1: look for the environment variable below in the DAG parameters.
+# Hint 2: experiment with using a drop-down menu and editing the generated JSON in the UI.
 # For more guidance, see: https://www.astronomer.io/docs/learn/airflow-params
 _CLOSENESS_THRESHOLD_LY_PARAMETER_NAME = "closeness_threshold_light_years"
 
