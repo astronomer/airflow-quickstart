@@ -1,8 +1,15 @@
-# ---------------------------------------------------------------------------- #
-# Exercise 1: Using a DAG parameter, add a DAG doc describing the DAG.
-# ---------------------------------------------------------------------------- #
-# See: https://www.astronomer.io/docs/learn/custom-airflow-ui-docs-tutorial
+"""
+## Jaffle Shop dbt on Astro example DAG
 
+This example demonstrates how to run dbt on Airflow using Cosmos and the DuckDB adapter.
+
+Cosmos allows you to run dbt Core projects as Apache Airflow DAGs and Task Groups with
+a few lines of code.
+For more info about Cosmos, see: https://astronomer.github.io/astronomer-cosmos
+
+"""
+
+# Airflow DAG for running dbt on the jaffle_shop project using the duckdb adapter.
 from datetime import datetime
 
 from cosmos import DbtDag, ProjectConfig, ProfileConfig
@@ -27,6 +34,7 @@ dbt_cosmos_dag = DbtDag(
     # Warning - in-memory DuckDB is not a persistent database between workers. To move this workflow in production, use a
     # cloud-based database and based on concurrency capabilities adjust the two parameters below.
     max_active_runs=1,  # only allow one concurrent run of this DAG, prevents parallel DuckDB calls
+    doc_md=__doc__,  # Add DAG Docs in the UI, see https://www.astronomer.io/docs/learn/custom-airflow-ui-docs-tutorial
     concurrency=1, # only allow a single task execution at a time, prevents parallel DuckDB calls
     is_paused_upon_creation=False, # start running the DAG as soon as its created
 )
