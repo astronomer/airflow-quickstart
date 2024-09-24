@@ -28,22 +28,20 @@ from include.custom_functions.galaxy_functions import get_galaxy_data
 t_log = logging.getLogger("airflow.task")
 
 # ---------------------------------------------------------------------------- #
-# Exercise 1: Make an Airflow param customizable using an environment variable #
+# Exercise 1: Complete interactive options on manual runs using Airflow params #
 # ---------------------------------------------------------------------------- #
-# Add an environment variable to allow a user to set a different value for the
-# `_CLOSENESS_THRESHOLD_LY_PARAMETER` while supplying a default value.
-# Hint 1: don't forget to replace the hard-coded value of 500000 currently being
-# passed to the `Param()` function in `params`. See the DAG definition below.
-# Hint 2: you can use the same format for the environment variable as the one
-# used to define `_NUM_GALAXIES_TOTAL`.
+# Complete an Airflow param that allows a user to set a value for the
+# `_CLOSENESS_THRESHOLD_LY_PARAMETER` variable on manual runs.
+# Hint 1: look for the environment variables below to find the relevant DAG parameter.
+# Hint 2: include a type, title, and description in the param.
+# For more guidance, see: https://www.astronomer.io/docs/learn/airflow-params
+_CLOSENESS_THRESHOLD_LY_PARAMETER_NAME = "closeness_threshold_light_years"
 
 # Define variables used in a DAG as environment variables in .env for your whole Airflow instance
 # to standardize your DAGs
 _DUCKDB_INSTANCE_NAME = os.getenv("DUCKDB_INSTANCE_NAME", "include/astronomy.db")
 _DUCKDB_TABLE_NAME = os.getenv("DUCKDB_TABLE_NAME", "galaxy_data")
 _DUCKDB_TABLE_URI = f"duckdb://{_DUCKDB_INSTANCE_NAME}/{_DUCKDB_TABLE_NAME}"
-_CLOSENESS_THRESHOLD_LY_DEFAULT = os.getenv("CLOSENESS_THRESHOLD_LY_DEFAULT", 500000)
-_CLOSENESS_THRESHOLD_LY_PARAMETER_NAME = "closeness_threshold_light_years"
 _NUM_GALAXIES_TOTAL = os.getenv("NUM_GALAXIES_TOTAL", 20)
 
 # -------------- #
@@ -68,9 +66,6 @@ _NUM_GALAXIES_TOTAL = os.getenv("NUM_GALAXIES_TOTAL", 20)
     params={  # Airflow params can add interactive options on manual runs. See: https://www.astronomer.io/docs/learn/airflow-params
         _CLOSENESS_THRESHOLD_LY_PARAMETER_NAME: Param(
             500000,
-            type="number",
-            title="Galaxy Closeness Threshold",
-            description="Set how close galaxies need ot be to the milkyway in order to be loaded to DuckDB.",
         )
     },
     # Warning - in-memory DuckDB is not a persistent database between workers. To move this workflow into production, use a

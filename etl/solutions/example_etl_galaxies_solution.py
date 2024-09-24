@@ -32,7 +32,6 @@ t_log = logging.getLogger("airflow.task")
 _DUCKDB_INSTANCE_NAME = os.getenv("DUCKDB_INSTANCE_NAME", "include/astronomy.db")
 _DUCKDB_TABLE_NAME = os.getenv("DUCKDB_TABLE_NAME", "galaxy_data")
 _DUCKDB_TABLE_URI = f"duckdb://{_DUCKDB_INSTANCE_NAME}/{_DUCKDB_TABLE_NAME}"
-_CLOSENESS_THRESHOLD_LY_DEFAULT = os.getenv("CLOSENESS_THRESHOLD_LY_DEFAULT", 500000)
 _CLOSENESS_THRESHOLD_LY_PARAMETER_NAME = "closeness_threshold_light_years"
 _NUM_GALAXIES_TOTAL = os.getenv("NUM_GALAXIES_TOTAL", 20)
 
@@ -57,7 +56,7 @@ _NUM_GALAXIES_TOTAL = os.getenv("NUM_GALAXIES_TOTAL", 20)
     tags=["example", "ETL"],  # Add tags in the UI
     params={  # Airflow params can add interactive options on manual runs. See: https://www.astronomer.io/docs/learn/airflow-params
         _CLOSENESS_THRESHOLD_LY_PARAMETER_NAME: Param(
-            _CLOSENESS_THRESHOLD_LY_DEFAULT,
+            500000,
             type="number",
             title="Galaxy Closeness Threshold",
             description="Set how close galaxies need ot be to the milkyway in order to be loaded to DuckDB.",
