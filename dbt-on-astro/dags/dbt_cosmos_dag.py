@@ -1,6 +1,6 @@
-# ---------------------------------------------------------------------------- #
-# Exercise 1: Using a DAG parameter, add a DAG doc describing the DAG.
-# ---------------------------------------------------------------------------- #
+# -------------------------------------------------------------------- #
+# Exercise: Using a DAG parameter, add a DAG doc describing the DAG. #
+# -------------------------------------------------------------------- #
 # See: https://www.astronomer.io/docs/learn/custom-airflow-ui-docs-tutorial
 
 from datetime import datetime

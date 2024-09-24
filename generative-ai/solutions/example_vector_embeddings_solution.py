@@ -18,16 +18,8 @@ import duckdb
 import logging
 import os
 
-# -------------------------------- #
-# Exercise: Modularize this DAG. #
-# -------------------------------- #
-# Follow best practices and modularize this DAG by converting 
-# `get_embeddings_one_word` from top-level code to an imported module.
-# Keeping code that isn't part of your DAG or operator instantiations
-# in a separate file makes your DAG easier to read, maintain, and update.
-# Hint: add an import statemt to make use of the existing module in the 
-# include directory and remove the top-level function.
-# For more guidance, see: https://www.astronomer.io/docs/learn/dag-best-practices#treat-your-dag-file-like-a-config-file.
+# modularize code by importing functions from the include folder
+from include.custom_functions.embedding_func import get_embeddings_one_word
 
 # use the Airflow task logger to log information to the task logs (or use print())
 t_log = logging.getLogger("airflow.task")
@@ -44,24 +36,6 @@ _LIST_OF_WORDS_PARAMETER_NAME = os.getenv(
     "LIST_OF_WORDS_PARAMETER_NAME", "my_list_of_words"
 )
 _LIST_OF_WORDS_DEFAULT = ["sun", "rocket", "planet", "light", "happiness"]
-
-def get_embeddings_one_word(word):
-    """
-    Embeds a single word using the SentenceTransformers library.
-    Args:
-        word (str): The word to embed.
-    Returns:
-        dict: A dictionary with the word as key and the embeddings as value.
-    """
-    from sentence_transformers import SentenceTransformer
-
-    model = SentenceTransformer("all-MiniLM-L6-v2")
-
-    embeddings = model.encode(word)
-    embeddings = embeddings.tolist()
-
-    return {word: embeddings}
-
 # -------------- #
 # DAG Definition #
 # -------------- #
