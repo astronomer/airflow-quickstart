@@ -18,9 +18,9 @@ import duckdb
 import logging
 import os
 
-# -------------------------------- #
+# ------------------------------ #
 # Exercise: Modularize this DAG. #
-# -------------------------------- #
+# ------------------------------ #
 # Follow best practices and modularize this DAG by converting 
 # `get_embeddings_one_word` from top-level code to an imported module.
 # Keeping code that isn't part of your DAG or operator instantiations
