@@ -25,6 +25,7 @@ from airflow.decorators import (
     dag,
     task,
 )  # This DAG uses the TaskFlow API. See: https://www.astronomer.io/docs/learn/airflow-decorators
+from airflow.models.baseoperator import chain
 from pendulum import datetime, duration
 import requests
 
@@ -34,7 +35,8 @@ import requests
 # -------------- #
 
 
-# instantiate a DAG with the @dag decorator and set DAG parameters (see: https://www.astronomer.io/docs/learn/airflow-dag-parameters)
+# Instantiate a DAG with the @dag decorator and set DAG parameters 
+# (see: https://www.astronomer.io/docs/learn/airflow-dag-parameters).
 @dag(
     start_date=datetime(2024, 1, 1),  # date after which the DAG can be scheduled
     schedule="@daily",  # see: https://www.astronomer.io/docs/learn/scheduling-in-airflow for options
@@ -54,26 +56,32 @@ def example_astronauts():
     # ---------------- #
     # Task Definitions #
     # ---------------- #
-    # the @task decorator turns any Python function into an Airflow task
-    # any @task decorated function that is called inside the @dag decorated
+    # The @task decorator turns any Python function into an Airflow task.
+    # Any @task-decorated function that is called inside the @dag-decorated
     # function is automatically added to the DAG.
-    # if one exists for your use case you can still use traditional Airflow operators
-    # and mix them with @task decorators. Checkout registry.astronomer.io for available operators
-    # see: https://www.astronomer.io/docs/learn/airflow-decorators for information about @task
-    # see: https://www.astronomer.io/docs/learn/what-is-an-operator for information about traditional operators
+    # 
+    # If one exists for your use case, you can still use traditional Airflow operators
+    # and mix them with @task decorators. Check out registry.astronomer.io for available operators.
+    # 
+    # See: https://www.astronomer.io/docs/learn/airflow-decorators for information about the @task
+    # decorator.
+    # See: https://www.astronomer.io/docs/learn/what-is-an-operator for information about traditional 
+    # operators.
 
-    # ------------------------------------------------- #
-    # Exercise: Define this task as a Dataset producer. #
-    # ------------------------------------------------- #
+    # -------------------------------------------------- #
+    # Exercise 1: Define this task as a Dataset producer #
+    # -------------------------------------------------- #
     # With Datasets, DAGs that access the same data can have explicit, visible 
     # relationships, and DAGs can be scheduled based on updates to these datasets. 
     # This feature helps make Airflow data-aware and expands Airflow scheduling 
     # capabilities beyond time-based methods such as cron. Downstream DAGs can be 
     # scheduled based on combinations of Dataset updates coming from tasks in the 
     # same Airflow instance or calls to the Airflow API.
+    # 
     # To define this task as a producer of a Dataset, pass a Dataset object,
     # encapsulated in a list, as an argument to the task's `outlets` parameter.
     # For more guidance, see: https://www.astronomer.io/docs/learn/airflow-datasets
+    
     @task
     def get_astronauts(**context) -> list[dict]:
         """
@@ -113,19 +121,53 @@ def example_astronauts():
 
         print(f"{name} is in space flying on the {craft}! {greeting}")
 
+    @task
+    def print_astronauts(**context) -> None:
+
+        # ------------------------------------------- #
+        # Exercise 2: Manually pull a value from XCom #
+        # ------------------------------------------- #
+        # The TaskFlow API uses Airflow XComs to allow you to pass small amounts 
+        # of data between tasks automatically by passing the return value of a 
+        # @task-decorated function to another one when you set dependencies. 
+        # For an example, see:
+        # https://www.astronomer.io/docs/learn/airflow-passing-data-between-tasks?tab=traditional#example-dag 
+        # 
+        # This exercise will help you understand XComs and give you a peek 
+        # under the hood of the TaskFlow API.
+        # 
+        # Modify this task to print, instead of the hard-coded value currently 
+        # being used to define `number_of_people_in_space`, the value you pushed 
+        # to XCom in the `get_astronauts` upstream task. To do this, replace the 
+        # hard-coded value with an `xcom_pull` function using the task instance 
+        # context.
+        # 
+        # Hint: the `xcom_pull` code should be almost identical to the `xcom_push` 
+        # function call, except for the fact that you need to pass a `task_ids` 
+        # parameter and argument to the function instead of a `value`.
+        # 
+        # For more guidance, see: 
+        # https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/xcoms.html
+        
+        number_of_people_in_space = 12
+        print(f"{number_of_people_in_space} people are in space!")
+
     # ------------------------------------ #
-    # Calling tasks + Setting dependencies #
+    # Calling tasks + setting dependencies #
     # ------------------------------------ #
 
-    # each call of a @task decorated function creates one task in the Airflow UI
-    # passing the return value of one @task decorated function to another one
-    # automatically creates a task dependency
+    # Each call of a @task-decorated function creates one task in the Airflow UI.
+    # Passing the return value of one @task-decorated function to another one
+    # automatically creates a task dependency.
 
     # This task uses dynamic task mapping to create a variable number of copies
-    # of the print_astronaut_craft task at runtime in parallel
+    # of the `print_astronaut_craft` task at runtime in parallel.
     # See: https://www.astronomer.io/docs/learn/dynamic-tasks
-    print_astronaut_craft.partial(greeting="Hello! :)").expand(
-        person_in_space=get_astronauts()
+    chain(
+        print_astronaut_craft.partial(greeting="Hello! :)").expand(
+            person_in_space=get_astronauts()
+        ),
+        print_astronauts()
     )
 
 

@@ -21,24 +21,25 @@ import duckdb
 import logging
 import os
 
-# Modularize code by importing functions from the include folder
+# Modularize code by importing functions from the include folder.
 from include.custom_functions.galaxy_functions import get_galaxy_data
 
-# Use the Airflow task logger to log information to the task logs (or use print())
+# Use the Airflow task logger to log information to the task logs (or use print()).
 t_log = logging.getLogger("airflow.task")
 
-# ---------------------------------------------------------------------------- #
-# Exercise 1: Complete interactive options on manual runs using Airflow params #
-# ---------------------------------------------------------------------------- #
+# ------------------------------------------------------------------------------ #
+# Exercise 1: Complete interactive options on manual runs using an Airflow param #
+# ------------------------------------------------------------------------------ #
 # Complete an Airflow param that allows a user to set a value for the
 # `_CLOSENESS_THRESHOLD_LY_PARAMETER` variable on manual runs.
-# Hint 1: look for the environment variable below in the DAG parameters.
-# Hint 2: experiment with using a drop-down menu and editing the generated JSON in the UI.
+# Hint: you'll be editing the code where the `_CLOSENESS_THRESHOLD_LY_PARAMETER_NAME` 
+# appears in the DAG definition.
+# Option: experiment with using a drop-down menu and editing the generated JSON in the UI.
 # For more guidance, see: https://www.astronomer.io/docs/learn/airflow-params
 _CLOSENESS_THRESHOLD_LY_PARAMETER_NAME = "closeness_threshold_light_years"
 
 # Define variables used in a DAG as environment variables in .env for your whole Airflow instance
-# to standardize your DAGs
+# to standardize your DAGs.
 _DUCKDB_INSTANCE_NAME = os.getenv("DUCKDB_INSTANCE_NAME", "include/astronomy.db")
 _DUCKDB_TABLE_NAME = os.getenv("DUCKDB_TABLE_NAME", "galaxy_data")
 _DUCKDB_TABLE_URI = f"duckdb://{_DUCKDB_INSTANCE_NAME}/{_DUCKDB_TABLE_NAME}"
@@ -49,7 +50,8 @@ _NUM_GALAXIES_TOTAL = os.getenv("NUM_GALAXIES_TOTAL", 20)
 # -------------- #
 
 
-# Instantiate a DAG with the @dag decorator and set DAG parameters (see: https://www.astronomer.io/docs/learn/airflow-dag-parameters)
+# Instantiate a DAG with the @dag decorator and set DAG parameters 
+# (see: https://www.astronomer.io/docs/learn/airflow-dag-parameters).
 @dag(
     start_date=datetime(2024, 7, 1),  # Date after which the DAG can be scheduled
     schedule="@daily",  # See: https://www.astronomer.io/docs/learn/scheduling-in-airflow for options
@@ -78,13 +80,15 @@ def example_etl_galaxies():  # By default, the dag_id is the name of the decorat
     # ---------------- #
     # Task Definitions #
     # ---------------- #
-    # The @task decorator turns any Python function into an Airflow task
-    # any @task decorated function that is called inside the @dag-decorated
+    # The @task decorator turns any Python function into an Airflow task.
+    # Any @task-decorated function that is called inside the @dag-decorated
     # function is automatically added to the DAG.
+    #
     # If one exists for your use case, you can still use traditional Airflow operators
     # and mix them with @task decorators. Check out registry.astronomer.io for available operators.
-    # see: https://www.astronomer.io/docs/learn/airflow-decorators for information about @task
-    # see: https://www.astronomer.io/docs/learn/what-is-an-operator for information about traditional operators
+    #
+    # See: https://www.astronomer.io/docs/learn/airflow-decorators for information about the @task decorator.
+    # See: https://www.astronomer.io/docs/learn/what-is-an-operator for information about traditional operators.
 
     @task(retries=2)  # You can override default_args at the task level
     def create_galaxy_table_in_duckdb(  # By default, the name of the decorated function is the task_id
@@ -224,12 +228,12 @@ def example_etl_galaxies():  # By default, the dag_id is the name of the decorat
     load_galaxy_data_obj = load_galaxy_data(transform_galaxy_data_obj)
 
 
-    # -------------------------------- #
-    # Exercise 2: Setting dependencies #
-    # -------------------------------- #
+    # --------------------------------------------------- #
+    # Exercise 2: Set dependencies using a chain function #
+    # --------------------------------------------------- #
     # You can set explicit dependencies using the chain function or bit-shift operators.
     # Replace the bit-shift approach taken here with a chain function.
-    # See: https://www.astronomer.io/docs/learn/managing-dependencies
+    # For more guidance, see: https://www.astronomer.io/docs/learn/managing-dependencies
 
     create_galaxy_table_in_duckdb_obj >> load_galaxy_data_obj >> print_loaded_galaxies()
 

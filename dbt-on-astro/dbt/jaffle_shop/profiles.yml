@@ -1,6 +1,0 @@
-duckdb_profile:
-  target: dev
-  outputs:
-    dev:
-      path: /tmp/dbt.duckdb
-      type: duckdb

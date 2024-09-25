@@ -18,14 +18,14 @@ import duckdb
 import logging
 import os
 
-# modularize code by importing functions from the include folder
+# Modularize code by importing functions from the include folder.
 from include.custom_functions.embedding_func import get_embeddings_one_word
 
-# use the Airflow task logger to log information to the task logs (or use print())
+# Use the Airflow task logger to log information to the task logs (or use print()).
 t_log = logging.getLogger("airflow.task")
 
-# define variables used in a DAG as environment variables in .env for your whole Airflow instance
-# to standardize your DAGs
+# Define variables used in a DAG as environment variables in .env for your whole Airflow instance
+# to standardize your DAGs.
 _DUCKDB_INSTANCE_NAME = os.getenv("DUCKDB_INSTANCE_NAME", "include/astronomy.db")
 _DUCKDB_TABLE_NAME = os.getenv("DUCKDB_TABLE_NAME", "embeddings_table")
 _WORD_OF_INTEREST_PARAMETER_NAME = os.getenv(
@@ -36,12 +36,14 @@ _LIST_OF_WORDS_PARAMETER_NAME = os.getenv(
     "LIST_OF_WORDS_PARAMETER_NAME", "my_list_of_words"
 )
 _LIST_OF_WORDS_DEFAULT = ["sun", "rocket", "planet", "light", "happiness"]
+
 # -------------- #
 # DAG Definition #
 # -------------- #
 
 
-# instantiate a DAG with the @dag decorator and set DAG parameters (see: https://www.astronomer.io/docs/learn/airflow-dag-parameters)
+# Instantiate a DAG with the @dag decorator and set DAG parameters 
+# (see: https://www.astronomer.io/docs/learn/airflow-dag-parameters).
 @dag(
     start_date=datetime(2024, 5, 1),  # date after which the DAG can be scheduled
     schedule="@daily",  # see: https://www.astronomer.io/docs/learn/scheduling-in-airflow for options
@@ -79,13 +81,15 @@ def example_vector_embeddings():  # by default the dag_id is the name of the dec
     # ---------------- #
     # Task Definitions #
     # ---------------- #
-    # the @task decorator turns any Python function into an Airflow task
-    # any @task decorated function that is called inside the @dag decorated
+    # The @task decorator turns any Python function into an Airflow task.
+    # Any @task-decorated function that is called inside the @dag-decorated
     # function is automatically added to the DAG.
-    # if one exists for your use case you can still use traditional Airflow operators
-    # and mix them with @task decorators. Checkout registry.astronomer.io for available operators
-    # see: https://www.astronomer.io/docs/learn/airflow-decorators for information about @task
-    # see: https://www.astronomer.io/docs/learn/what-is-an-operator for information about traditional operators
+    #
+    # If one exists for your use case, you can still use traditional Airflow operators
+    # and mix them with @task decorators. Check out registry.astronomer.io for available operators.
+    #
+    # See: https://www.astronomer.io/docs/learn/airflow-decorators for information about the @task decorator.
+    # See: https://www.astronomer.io/docs/learn/what-is-an-operator for information about traditional operators
 
     @task(retries=2)  # you can override default_args at the task level
     def get_words(
@@ -242,13 +246,13 @@ def example_vector_embeddings():  # by default the dag_id is the name of the dec
     # Calling tasks + Setting dependencies #
     # ------------------------------------ #
 
-    # each call of a @task decorated function creates one task in the Airflow UI
-    # passing the return value of one @task decorated function to another one
-    # automatically creates a task dependency
+    # Each call of a @task-decorated function creates one task in the Airflow UI.
+    # Passing the return value of one @task-decorated function to another one
+    # automatically creates a task dependency.
     create_embeddings_obj = create_embeddings(list_of_words=get_words())
     embed_word_obj = embed_word()
 
-    # you can set explicit dependencies using the chain function (or bit-shift operators)
+    # You can set explicit dependencies using the chain function (or bit-shift operators).
     # See: https://www.astronomer.io/docs/learn/managing-dependencies
     chain(
         create_vector_table(),

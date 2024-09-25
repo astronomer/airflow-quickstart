@@ -15,25 +15,33 @@ from airflow.models.param import Param
 from pendulum import datetime, duration
 from tabulate import tabulate
 import duckdb
-import logging
 import os
 
-# ------------------------------ #
-# Exercise: Modularize this DAG. #
-# ------------------------------ #
-# Follow best practices and modularize this DAG by converting 
-# `get_embeddings_one_word` from top-level code to an imported module.
+# ------------------------------- #
+# Exercise 1: Modularize this DAG #
+# ------------------------------- #
 # Keeping code that isn't part of your DAG or operator instantiations
 # in a separate file makes your DAG easier to read, maintain, and update.
-# Hint: add an import statemt to make use of the existing module in the 
-# include directory and remove the top-level function.
-# For more guidance, see: https://www.astronomer.io/docs/learn/dag-best-practices#treat-your-dag-file-like-a-config-file.
+# Follow best practices and modularize this DAG by converting 
+# `get_embeddings_one_word` from top-level code to an imported module.
+# Hint: all you need to do in this case is replace the top-level function 
+# with an import statement.
+# For more guidance, see: 
+# https://www.astronomer.io/docs/learn/dag-best-practices#treat-your-dag-file-like-a-config-file
 
-# use the Airflow task logger to log information to the task logs (or use print())
-t_log = logging.getLogger("airflow.task")
+# ----------------------- #
+# Exercise 2: Add logging #
+# ----------------------- #
+# Add an Airflow task logger to log information to the task logs using 
+# the default logger for tasks. Use `t_log` as a top-level variable for 
+# instantiating an `airflow.task` logger object and uncomment the logging 
+# statements in the `find_closest_word_match` task.
+# Hint 1: don't forget to import the Python logging framework!
+# Hint 2: for more info about setting up logging and example code, see: 
+# https://www.astronomer.io/docs/learn/logging#add-custom-task-logs-from-a-dag
 
-# define variables used in a DAG as environment variables in .env for your whole Airflow instance
-# to standardize your DAGs
+# Define variables used in a DAG as environment variables in .env for your whole Airflow instance
+# to standardize your DAGs.
 _DUCKDB_INSTANCE_NAME = os.getenv("DUCKDB_INSTANCE_NAME", "include/astronomy.db")
 _DUCKDB_TABLE_NAME = os.getenv("DUCKDB_TABLE_NAME", "embeddings_table")
 _WORD_OF_INTEREST_PARAMETER_NAME = os.getenv(
@@ -67,7 +75,8 @@ def get_embeddings_one_word(word):
 # -------------- #
 
 
-# instantiate a DAG with the @dag decorator and set DAG parameters (see: https://www.astronomer.io/docs/learn/airflow-dag-parameters)
+# Instantiate a DAG with the @dag decorator and set DAG parameters 
+# (see: https://www.astronomer.io/docs/learn/airflow-dag-parameters).
 @dag(
     start_date=datetime(2024, 5, 1),  # date after which the DAG can be scheduled
     schedule="@daily",  # see: https://www.astronomer.io/docs/learn/scheduling-in-airflow for options
@@ -105,13 +114,15 @@ def example_vector_embeddings():  # by default the dag_id is the name of the dec
     # ---------------- #
     # Task Definitions #
     # ---------------- #
-    # the @task decorator turns any Python function into an Airflow task
-    # any @task decorated function that is called inside the @dag decorated
+    # The @task decorator turns any Python function into an Airflow task.
+    # Any @task-decorated function that is called inside the @dag-decorated
     # function is automatically added to the DAG.
-    # if one exists for your use case you can still use traditional Airflow operators
-    # and mix them with @task decorators. Checkout registry.astronomer.io for available operators
-    # see: https://www.astronomer.io/docs/learn/airflow-decorators for information about @task
-    # see: https://www.astronomer.io/docs/learn/what-is-an-operator for information about traditional operators
+    # 
+    # If one exists for your use case, you can still use traditional Airflow operators
+    # and mix them with @task decorators. Check out registry.astronomer.io for available operators.
+    #
+    # See: https://www.astronomer.io/docs/learn/airflow-decorators for information about the @task decorator.
+    # See: https://www.astronomer.io/docs/learn/what-is-an-operator for information about traditional operators.
 
     @task(retries=2)  # you can override default_args at the task level
     def get_words(
@@ -259,22 +270,22 @@ def example_vector_embeddings():  # by default the dag_id is the name of the dec
 
         top_3 = top_3.fetchall()
 
-        t_log.info(f"Top 3 closest words to '{word}':")
-        t_log.info(tabulate(top_3, headers=["Word"], tablefmt="pretty"))
+        # t_log.info(f"Top 3 closest words to '{word}':")
+        # t_log.info(tabulate(top_3, headers=["Word"], tablefmt="pretty"))
 
         return top_3
 
     # ------------------------------------ #
-    # Calling tasks + Setting dependencies #
+    # Calling tasks + setting dependencies #
     # ------------------------------------ #
 
-    # each call of a @task decorated function creates one task in the Airflow UI
-    # passing the return value of one @task decorated function to another one
-    # automatically creates a task dependency
+    # Each call of a @task-decorated function creates one task in the Airflow UI.
+    # Passing the return value of one @task-decorated function to another one
+    # automatically creates a task dependency.
     create_embeddings_obj = create_embeddings(list_of_words=get_words())
     embed_word_obj = embed_word()
 
-    # you can set explicit dependencies using the chain function (or bit-shift operators)
+    # You can set explicit dependencies using the chain function (or bit-shift operators).
     # See: https://www.astronomer.io/docs/learn/managing-dependencies
     chain(
         create_vector_table(),

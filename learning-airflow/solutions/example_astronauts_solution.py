@@ -25,6 +25,7 @@ from airflow.decorators import (
     dag,
     task,
 )  # This DAG uses the TaskFlow API. See: https://www.astronomer.io/docs/learn/airflow-decorators
+from airflow.models.baseoperator import chain
 from pendulum import datetime, duration
 import requests
 
@@ -34,7 +35,8 @@ import requests
 # -------------- #
 
 
-# instantiate a DAG with the @dag decorator and set DAG parameters (see: https://www.astronomer.io/docs/learn/airflow-dag-parameters)
+# Instantiate a DAG with the @dag decorator and set DAG parameters 
+# (see: https://www.astronomer.io/docs/learn/airflow-dag-parameters).
 @dag(
     start_date=datetime(2024, 1, 1),  # date after which the DAG can be scheduled
     schedule="@daily",  # see: https://www.astronomer.io/docs/learn/scheduling-in-airflow for options
@@ -54,13 +56,15 @@ def example_astronauts():
     # ---------------- #
     # Task Definitions #
     # ---------------- #
-    # the @task decorator turns any Python function into an Airflow task
-    # any @task decorated function that is called inside the @dag decorated
+    # The @task decorator turns any Python function into an Airflow task.
+    # Any @task-decorated function that is called inside the @dag-decorated
     # function is automatically added to the DAG.
-    # if one exists for your use case you can still use traditional Airflow operators
-    # and mix them with @task decorators. Checkout registry.astronomer.io for available operators
-    # see: https://www.astronomer.io/docs/learn/airflow-decorators for information about @task
-    # see: https://www.astronomer.io/docs/learn/what-is-an-operator for information about traditional operators
+    # 
+    # If one exists for your use cas,e you can still use traditional Airflow operators
+    # and mix them with @task decorators. Check out registry.astronomer.io for available operators.
+    # 
+    # See: https://www.astronomer.io/docs/learn/airflow-decorators for information about the @task decorator.
+    # See: https://www.astronomer.io/docs/learn/what-is-an-operator for information about traditional operators.
 
     @task(
         outlets=[Dataset("current_astronauts")]
@@ -69,7 +73,7 @@ def example_astronauts():
         """
         This task uses the requests library to retrieve a list of Astronauts
         currently in space. The results are pushed to XCom with a specific key
-        so they can be used in a downstream pipeline. The task returns a list
+        so they can be used in downstream tasks and pipelines. The task returns a list
         of Astronauts to be used in the next task.
         """
         try:
@@ -103,19 +107,33 @@ def example_astronauts():
 
         print(f"{name} is in space flying on the {craft}! {greeting}")
 
+    @task
+    def print_astronauts(**context) -> None:
+        """
+        By pulling a value from XCom, this task prints the number of astronauts 
+        pushed to XCom in the `get_astronauts` upstream task.
+        """
+        number_of_people_in_space = context["ti"].xcom_pull(
+            key="number_of_people_in_space", task_ids="get_astronauts"
+        )
+        print(f"{number_of_people_in_space} people are in space!")
+
     # ------------------------------------ #
-    # Calling tasks + Setting dependencies #
+    # Calling tasks + setting dependencies #
     # ------------------------------------ #
 
-    # each call of a @task decorated function creates one task in the Airflow UI
-    # passing the return value of one @task decorated function to another one
-    # automatically creates a task dependency
+    # Each call of a @task-decorated function creates one task in the Airflow UI.
+    # Passing the return value of one @task-decorated function to another one
+    # automatically creates a task dependency.
 
     # This task uses dynamic task mapping to create a variable number of copies
-    # of the print_astronaut_craft task at runtime in parallel
+    # of the `print_astronaut_craft `task at runtime in parallel.
     # See: https://www.astronomer.io/docs/learn/dynamic-tasks
-    print_astronaut_craft.partial(greeting="Hello! :)").expand(
-        person_in_space=get_astronauts()
+    chain(
+        print_astronaut_craft.partial(greeting="Hello! :)").expand(
+            person_in_space=get_astronauts()
+        ),
+        print_astronauts()
     )
 
 
