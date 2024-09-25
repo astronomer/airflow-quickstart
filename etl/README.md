@@ -30,11 +30,11 @@ Your Astro project contains the following files and folders:
 
 ## Exercise 1
 
-- Make an Airflow param customizable using an evironment variable. See the `example_etl_galaxies` DAG for details.
+- Make an Airflow param customizable using an environment variable. See the `example_etl_galaxies` DAG for details.
 
 ## Exercise 2
 
-- Replace the bit-shift operator approach to setting dependencies to a chain function. See the DAG for details.
+- Replace the bit-shift operator approach to setting dependencies with a chain function. See the DAG for details.
 
 # Deploying to Production
 

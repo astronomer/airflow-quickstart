@@ -36,9 +36,15 @@ Note: Running 'astro dev start' will start your project with the Airflow Webserv
 
 You should also be able to access your Postgres Database at 'localhost:5432/postgres'.
 
-# Exercise
+# Exercises
 
-- Define the task as a Dataset producer using the Airflow Datasets feature. For specific instructions, see the DAG file.
+## Exercise 1
+
+- Define the task as a Dataset producer using the Airflow Datasets feature. For specific instructions, see the `example_astronauts` DAG file.
+
+## Exercise 2
+
+- Manually pull a value from XCom. See the DAG file for details.
 
 # Deploy Your Project to Astronomer
 
