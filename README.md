@@ -8,9 +8,9 @@ Launch your journey with Airflow by signing up for a trial at astronomer.io! If 
 
 This repository contains 3 projects for demonstrating the capabilities and use cases of Airflow.
 
+- [Learning Airflow](learning-airflow/README.md) A project for learning the basics of Airflow
 - [ETL](etl/README.md) A project for learning the basics of ETL with Airflow
 - [Generative AI](generative-ai/README.md) A project for learning how to use Airflow to train a generative AI model
-- [Learning Airflow](learning-airflow/README.md) A project for learning the basics of Airflow
 
 ## Purpose of This Repository
 
