@@ -1,4 +1,0 @@
-streamlit==1.37.0
-duckdb==1.0.0
-pandas<2.0.0
-numpy==1.26.4
