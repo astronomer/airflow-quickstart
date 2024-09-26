@@ -2,7 +2,7 @@
 
 Welcome to the Astronomer's Apache Airflow Quickstart repository!
 
-Launch your journey with Airflow by signing up for a trial at astronomer.io! If you've already created a trial and have cloned this repository, check out your chosen quickstart in the table of contents.
+Launch your journey with Airflow by signing up for a free trial at astronomer.io! If you've already created a trial and have cloned this repository, check out your chosen quickstart in the table of contents.
 
 ## Table of Contents
 
@@ -29,16 +29,16 @@ As you move your workloads into business-critical applications or adopt advanced
 This command will spin up 4 Docker containers on your machine, each for a different Airflow component:
 
 - Postgres: Airflow's Metadata Database
-- Webserver: The Airflow component responsible for rendering the Airflow UI
-- Scheduler: The Airflow component responsible for monitoring and triggering tasks
-- Triggerer: The Airflow component responsible for triggering deferred tasks
+- Webserver: the Airflow component responsible for rendering the Airflow UI
+- Scheduler: the Airflow component responsible for monitoring and triggering tasks
+- Triggerer: the Airflow component responsible for triggering deferred tasks
 
 3. Verify that all 4 Docker containers were created by running `docker ps`.
 
 Note: Running `astro dev start` will start your project with the Airflow Webserver exposed at port 8080 and Postgres exposed at port 5432. If you already have either of those ports allocated, you can either [stop your existing Docker containers or change the port](https://docs.astronomer.io/astro/test-and-troubleshoot-locally#ports-are-not-available).
 
-4. Access the Airflow UI for your local Airflow project. To do so, go to http://localhost:8080/ and log in with `admin` for both your Username and Password.
+4. Access the Airflow UI for your local Airflow project. To do so, go to http://localhost:8080/ and log in with `admin` for both your username and password.
 
-You should also be able to access your Postgres Database at `localhost:5432/postgres`.
+You should also be able to access your Postgres database at http://localhost:5432/postgres.
 
-5. Learn about enhancing and customizing Airflow's functionality by working through the exercise(s) in the DAG.
+5. Learn about enhancing and customizing Airflow's functionality by working through the exercises in the DAG.
