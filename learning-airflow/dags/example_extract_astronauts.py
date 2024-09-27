@@ -1,3 +1,17 @@
+"""
+## Astronaut Extract Example DAG
+
+This DAG extracts data from the database table created and loaded
+by the `example_astronauts` DAG.
+
+The `get_astronauts_from_table` task executes a SQL query on the
+DuckDB database and prints out the data.
+
+The DAG can be easily modified to use the Airflow Datasets feature 
+so it is scheduled to run only when another DAG in the same Airflow 
+environment updates the table this DAG queries.
+"""
+
 from airflow.decorators import (
     dag,
     task,
@@ -24,18 +38,22 @@ _DUCKDB_TABLE_URI = f"duckdb://{_DUCKDB_INSTANCE_NAME}/{_DUCKDB_TABLE_NAME}"
 # --------------------------------------- #
 # Exercise 3: Schedule a DAG on a Dataset #
 # --------------------------------------- #
-# Now that you have defined the `get_astronauts` task in the `example_astronauts` DAG as a Dataset 
-# producer (in Exercise 1), that Dataset can be used to schedule downstream DAG runs.
+# Now that you have defined the `get_astronauts` task in the 
+# `example_astronauts` DAG as a Dataset producer (in Exercise 1), that 
+# Dataset can be used to schedule downstream DAG runs.
 #
-# Datasets can function like an API to communicate when data at a specific location in your 
-# ecosystem is ready for use. Datasets also reduce the code required to create cross-DAG dependencies. 
-# For example, it's very easy to schedule a DAG to run when a Dataset has been updated by another DAG
-# in the same Airflow environment.
+# Datasets can function like an API to communicate when data at a 
+# specific location in your ecosystem is ready for use. Datasets also 
+# reduce the code required to create cross-DAG dependencies. For example, 
+# it's very easy to schedule a DAG to run when a Dataset has been updated 
+# by another DAG in the same Airflow environment.
 # 
-# To schedule this DAG to run when `example_astronauts` updates the `current_astronauts` Dataset, 
-# add an import statement above to make the Airflow Dataset package available and set the schedule 
-# below using the `current_astronauts` Dataset. For a code example and more guidance on using Airflow 
-# Datasets, see: https://www.astronomer.io/docs/learn/airflow-datasets#dataset-definition.
+# To schedule this DAG to run when `example_astronauts` updates the 
+# `current_astronauts` Dataset, add an import statement above to make the 
+# Airflow Dataset package available and set the schedule below using the 
+# `current_astronauts` Dataset. For a code example and more guidance on 
+# using Airflow Datasets, see: 
+# https://www.astronomer.io/docs/learn/airflow-datasets#dataset-definition.
 
 @dag(
     start_date=datetime(2024, 1, 1),  # date after which the DAG can be scheduled

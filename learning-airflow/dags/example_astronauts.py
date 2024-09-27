@@ -4,15 +4,29 @@
 This DAG queries the list of astronauts currently in space from the
 Open Notify API and prints each astronaut's name and flying craft.
 
-There are two tasks, one to get the data from the API and save the results,
-and another to print the results. Both tasks are written in Python using
-Airflow's TaskFlow API, which allows you to easily turn Python functions into
-Airflow tasks, and automatically infer dependencies and pass data.
+Altogether there are six tasks that get the data from the API and 
+save the results, print the results, create a database table for the 
+data, and load data into the table. All tasks are written in Python 
+using Airflow's TaskFlow API, which allows you to easily turn Python 
+functions into Airflow tasks, and automatically infer dependencies and 
+pass data.
 
-The second task uses dynamic task mapping to create a copy of the task for
-each Astronaut in the list retrieved from the API. This list will change
-depending on how many Astronauts are in space, and the DAG will adjust
-accordingly each time it runs.
+The first two tasks make get requests of a JSON API, data from which 
+are loaded into an in-memory database by the last task.
+
+The third and fourth tasks make use of this data in different ways. 
+The third task uses dynamic task mapping to create a copy of the task 
+for each Astronaut in the list retrieved from the API. This list will 
+change depending on how many Astronauts are in space, and the DAG will 
+adjust accordingly each time it runs. This task also makes data available 
+to downstream tasks using Airflow's XCom feature.
+
+The fourth task prints out different data obtained from the API, but it 
+can be easilymodified (hint, hint) to make use of the value pushed to an 
+XCom in the third task.
+
+The fifth and sixth tasks create a DuckDB database table for some of 
+the data and load the data, respectively.
 
 For more explanation and getting started instructions, see our Write your
 first DAG tutorial: https://docs.astronomer.io/learn/get-started-with-airflow
@@ -119,8 +133,6 @@ def example_astronauts():
         so they can be used in a downstream pipeline. The task returns a list
         of Astronauts to be used in the next task.
         """
-        from airflow.models import Variable
-
         try:
             r = requests.get("http://api.open-notify.org/astros.json")
             r.raise_for_status()
@@ -132,8 +144,6 @@ def example_astronauts():
         context["ti"].xcom_push(
             key="number_of_people_in_space", value=number_of_people_in_space
         )
-
-        Variable.set(key="number_of_people_in_space", value=number_of_people_in_space)
 
         return number_of_people_in_space
 
