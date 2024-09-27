@@ -36,6 +36,7 @@ t_log = logging.getLogger("airflow.task")
 # appears in the DAG definition.
 # Option: experiment with using a drop-down menu and editing the generated JSON in the UI.
 # For more guidance, see: https://www.astronomer.io/docs/learn/airflow-params
+_CLOSENESS_THRESHOLD_LY_DEFAULT = os.getenv("CLOSENESS_THRESHOLD_LY_DEFAULT", 500000)
 _CLOSENESS_THRESHOLD_LY_PARAMETER_NAME = "closeness_threshold_light_years"
 
 # Define variables used in a DAG as environment variables in .env for your whole Airflow instance
@@ -67,7 +68,7 @@ _NUM_GALAXIES_TOTAL = os.getenv("NUM_GALAXIES_TOTAL", 20)
     tags=["example", "ETL"],  # Add tags in the UI
     params={  # Airflow params can add interactive options on manual runs. See: https://www.astronomer.io/docs/learn/airflow-params
         _CLOSENESS_THRESHOLD_LY_PARAMETER_NAME: Param(
-            500000,
+            _CLOSENESS_THRESHOLD_LY_DEFAULT,
         )
     },
     # Warning - in-memory DuckDB is not a persistent database between workers. To move this workflow into production, use a
