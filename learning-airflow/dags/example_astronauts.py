@@ -28,6 +28,12 @@ from airflow.decorators import (
 from airflow.models.baseoperator import chain
 from pendulum import datetime, duration
 import requests
+import duckdb
+import os
+
+_DUCKDB_INSTANCE_NAME = os.getenv("DUCKDB_INSTANCE_NAME", "include/astronomy.db")
+_DUCKDB_TABLE_NAME = os.getenv("DUCKDB_TABLE_NAME", "astronaut_data")
+_DUCKDB_TABLE_URI = f"duckdb://{_DUCKDB_INSTANCE_NAME}/{_DUCKDB_TABLE_NAME}"
 
 
 # -------------- #
@@ -83,30 +89,53 @@ def example_astronauts():
     # For more guidance, see: https://www.astronomer.io/docs/learn/airflow-datasets
     
     @task
-    def get_astronauts(**context) -> list[dict]:
+    def get_astronaut_names(**context) -> list[dict]:
         """
         This task uses the requests library to retrieve a list of Astronauts
         currently in space. The results are pushed to XCom with a specific key
         so they can be used in a downstream pipeline. The task returns a list
         of Astronauts to be used in the next task.
         """
+        from airflow.models import Variable
+
         try:
             r = requests.get("http://api.open-notify.org/astros.json")
             r.raise_for_status()
-            number_of_people_in_space = r.json()["number"]
             list_of_people_in_space = r.json()["people"]
         except:
             print("API currently not available, using hardcoded data instead.")
-            number_of_people_in_space = 12
             list_of_people_in_space = [
                 {"craft": "ISS", "name": "Marco Alain Sieber"},
                 {"craft": "ISS", "name": "Claude Nicollier"},
             ]
 
+        return list_of_people_in_space
+
+    @task
+    def get_astronaut_numbers(**context) -> int:
+        """
+        This task uses the requests library to retrieve a list of Astronauts
+        currently in space. The results are pushed to XCom with a specific key
+        so they can be used in a downstream pipeline. The task returns a list
+        of Astronauts to be used in the next task.
+        """
+        from airflow.models import Variable
+
+        try:
+            r = requests.get("http://api.open-notify.org/astros.json")
+            r.raise_for_status()
+            number_of_people_in_space = r.json()["number"]
+        except:
+            print("API currently not available, using hardcoded data instead.")
+            number_of_people_in_space = 12
+
         context["ti"].xcom_push(
             key="number_of_people_in_space", value=number_of_people_in_space
         )
-        return list_of_people_in_space
+
+        Variable.set(key="number_of_people_in_space", value=number_of_people_in_space)
+
+        return number_of_people_in_space
 
     @task
     def print_astronaut_craft(greeting: str, person_in_space: dict) -> None:
@@ -152,6 +181,38 @@ def example_astronauts():
         number_of_people_in_space = 12
         print(f"{number_of_people_in_space} people are in space!")
 
+    @task(retries=2)  # You can override default_args at the task level
+    def create_astronauts_table_in_duckdb(  # By default, the name of the decorated function is the task_id
+        duckdb_instance_name: str = _DUCKDB_INSTANCE_NAME,
+        table_name: str = _DUCKDB_TABLE_NAME,
+    ) -> None:
+        """
+        Create a table in DuckDB to store data about astronauts.
+        This task simulates a setup step in an ETL pipeline.
+        Args:
+            duckdb_instance_name: The name of the DuckDB instance.
+            table_name: The name of the table to be created.
+        """
+        cursor = duckdb.connect(duckdb_instance_name)
+
+        cursor.execute(
+            f"""
+            CREATE OR REPLACE TABLE {table_name} (
+                num_astros INT,
+            )"""
+        )
+        cursor.close()
+
+    @task(retries=2)
+    def load_astronauts_in_duckdb(
+        num_astros: int,
+    ) -> None:
+          
+        cursor = duckdb.connect(_DUCKDB_INSTANCE_NAME)
+        cursor.sql(
+            f"INSERT INTO {_DUCKDB_TABLE_NAME} (num_astros) VALUES ({num_astros});"
+        )
+
     # ------------------------------------ #
     # Calling tasks + setting dependencies #
     # ------------------------------------ #
@@ -165,11 +226,12 @@ def example_astronauts():
     # See: https://www.astronomer.io/docs/learn/dynamic-tasks
     chain(
         print_astronaut_craft.partial(greeting="Hello! :)").expand(
-            person_in_space=get_astronauts()
+            person_in_space=get_astronaut_names()
         ),
-        print_astronauts()
+        print_astronauts(),
+        create_astronauts_table_in_duckdb(),
+        load_astronauts_in_duckdb(get_astronaut_numbers())
     )
-
 
 # Instantiate the DAG
 example_astronauts()
