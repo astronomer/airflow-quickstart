@@ -61,7 +61,7 @@ _NUM_GALAXIES_TOTAL = os.getenv("NUM_GALAXIES_TOTAL", 20)
             _CLOSENESS_THRESHOLD_LY_DEFAULT,
             type="number",
             title="Galaxy Closeness Threshold",
-            description="Set how close galaxies need ot be to the milkyway in order to be loaded to DuckDB.",
+            description="Set how close galaxies need to be to the milkyway in order to be loaded to DuckDB.",
         )
     },
     # Warning - in-memory DuckDB is not a persistent database between workers. To move this workflow into production, use a
