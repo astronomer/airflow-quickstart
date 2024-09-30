@@ -46,6 +46,10 @@ You should also be able to access your Postgres Database at `localhost:5432/post
 
 - Manually pull a value from XCom. See the DAG file for details.
 
+## Exercise 3
+
+- Schedule a DAG on a Dataset. See the `example_extract_astronauts` DAG file for details.
+
 # Deploy Your Project to Astronomer
 
 If you have an Astronomer account, pushing code to a Deployment on Astronomer is simple. For deploying instructions, refer to Astronomer documentation: https://docs.astronomer.io/cloud/deploy-code/
