@@ -39,6 +39,7 @@ import os
 # Hint 1: don't forget to import the Python logging framework!
 # Hint 2: for more info about setting up logging and example code, see: 
 # https://www.astronomer.io/docs/learn/logging#add-custom-task-logs-from-a-dag
+# Use the Airflow task logger to log information to the task logs (or use print()).
 
 # Define variables used in a DAG as environment variables in .env for your whole Airflow instance
 # to standardize your DAGs.
