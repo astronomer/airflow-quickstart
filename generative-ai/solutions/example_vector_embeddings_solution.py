@@ -18,6 +18,9 @@ import duckdb
 import logging
 import os
 
+# Imports needed for data quality checks
+from airflow.providers.common.sql.operators.sql import SQLColumnCheckOperator, SQLTableCheckOperator
+
 # Modularize code by importing functions from the include folder.
 from include.custom_functions.embedding_func import get_embeddings_one_word
 
@@ -36,6 +39,7 @@ _LIST_OF_WORDS_PARAMETER_NAME = os.getenv(
     "LIST_OF_WORDS_PARAMETER_NAME", "my_list_of_words"
 )
 _LIST_OF_WORDS_DEFAULT = ["sun", "rocket", "planet", "light", "happiness"]
+SODA_PATH="/Users/michael/Projects/astro-airflow-quickstart/airflow-quickstart/generative-ai/include"
 
 # -------------- #
 # DAG Definition #
@@ -76,7 +80,7 @@ _LIST_OF_WORDS_DEFAULT = ["sun", "rocket", "planet", "light", "happiness"]
     concurrency=1, # only allow a single task execution at a time, prevents parallel DuckDB calls
     is_paused_upon_creation=False, # start running the DAG as soon as its created
 )
-def example_vector_embeddings():  # by default the dag_id is the name of the decorated function
+def example_vector_embeddings_test():  # by default the dag_id is the name of the decorated function
 
     # ---------------- #
     # Task Definitions #
@@ -140,11 +144,6 @@ def example_vector_embeddings():  # by default the dag_id is the name of the dec
 
         cursor = duckdb.connect(duckdb_instance_name)
 
-        # setting up DuckDB to store vectors
-        cursor.execute("INSTALL vss;")
-        cursor.execute("LOAD vss;")
-        cursor.execute("SET hnsw_enable_experimental_persistence = true;")
-
         table_name = "embeddings_table"
 
         cursor.execute(
@@ -153,7 +152,45 @@ def example_vector_embeddings():  # by default the dag_id is the name of the dec
                 text STRING,
                 vec FLOAT[384]
             );
+            """
+        )
+        cursor.close()
 
+    data_quality_check_1 = SQLColumnCheckOperator(
+        task_id="data_quality_check_1",
+        table=_DUCKDB_TABLE_NAME,
+        column_mapping={
+            "text": {
+                "null_check": {
+                    "equal_to": 0
+                },
+            },
+            "vec": {
+                "null_check": {
+                    "equal_to": 0
+                },
+            },
+        },
+        conn_id="duckdb_default",
+        )
+
+    @task
+    def modify_vector_table(
+        duckdb_instance_name: str = _DUCKDB_INSTANCE_NAME,
+        table_name: str = _DUCKDB_TABLE_NAME,
+    ) -> None:
+
+        cursor = duckdb.connect(duckdb_instance_name)
+
+        # setting up DuckDB to store vectors
+        cursor.execute("INSTALL vss;")
+        cursor.execute("LOAD vss;")
+        cursor.execute("SET hnsw_enable_experimental_persistence = true;")
+
+        table_name = "embeddings_table"
+        
+        cursor.execute(
+            f"""
             -- Create an HNSW index on the embedding vector
             CREATE INDEX my_hnsw_index ON {table_name} USING HNSW (vec);
             """
@@ -189,6 +226,15 @@ def example_vector_embeddings():  # by default the dag_id is the name of the dec
             )
 
         cursor.close()
+
+    data_quality_check_2 = SQLTableCheckOperator(
+        task_id="data_quality_check_2",
+        conn_id="duckdb_default",
+        table=_DUCKDB_TABLE_NAME,
+        checks={
+            "row_count_check": {"check_statement": "COUNT(*) >= 5"},
+        },
+    )
 
     @task
     def embed_word(**context):
@@ -256,9 +302,12 @@ def example_vector_embeddings():  # by default the dag_id is the name of the dec
     # See: https://www.astronomer.io/docs/learn/managing-dependencies
     chain(
         create_vector_table(),
+        data_quality_check_1,
+        modify_vector_table(),
         insert_words_into_db(list_of_words_and_embeddings=create_embeddings_obj),
+        data_quality_check_2,
         find_closest_word_match(word_of_interest_embedding=embed_word_obj),
     )
 
 
-example_vector_embeddings()
+example_vector_embeddings_test()
