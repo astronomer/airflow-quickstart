@@ -80,7 +80,7 @@ SODA_PATH="/Users/michael/Projects/astro-airflow-quickstart/airflow-quickstart/g
     concurrency=1, # only allow a single task execution at a time, prevents parallel DuckDB calls
     is_paused_upon_creation=False, # start running the DAG as soon as its created
 )
-def example_vector_embeddings_test():  # by default the dag_id is the name of the decorated function
+def example_vector_embeddings_solution():  # by default the dag_id is the name of the decorated function
 
     # ---------------- #
     # Task Definitions #
@@ -144,6 +144,11 @@ def example_vector_embeddings_test():  # by default the dag_id is the name of th
 
         cursor = duckdb.connect(duckdb_instance_name)
 
+        # setting up DuckDB to store vectors
+        cursor.execute("INSTALL vss;")
+        cursor.execute("LOAD vss;")
+        cursor.execute("SET hnsw_enable_experimental_persistence = true;")
+
         table_name = "embeddings_table"
 
         cursor.execute(
@@ -154,48 +159,38 @@ def example_vector_embeddings_test():  # by default the dag_id is the name of th
             );
             """
         )
-        cursor.close()
 
-    data_quality_check_1 = SQLColumnCheckOperator(
-        task_id="data_quality_check_1",
-        table=_DUCKDB_TABLE_NAME,
-        column_mapping={
-            "text": {
-                "null_check": {
-                    "equal_to": 0
-                },
-            },
-            "vec": {
-                "null_check": {
-                    "equal_to": 0
-                },
-            },
-        },
-        conn_id="duckdb_default",
-        )
-
-    @task
-    def modify_vector_table(
-        duckdb_instance_name: str = _DUCKDB_INSTANCE_NAME,
-        table_name: str = _DUCKDB_TABLE_NAME,
-    ) -> None:
-
-        cursor = duckdb.connect(duckdb_instance_name)
-
-        # setting up DuckDB to store vectors
-        cursor.execute("INSTALL vss;")
-        cursor.execute("LOAD vss;")
-        cursor.execute("SET hnsw_enable_experimental_persistence = true;")
-
-        table_name = "embeddings_table"
-        
         cursor.execute(
             f"""
             -- Create an HNSW index on the embedding vector
             CREATE INDEX my_hnsw_index ON {table_name} USING HNSW (vec);
             """
         )
+
         cursor.close()
+
+    # @task
+    # def modify_vector_table(
+    #     duckdb_instance_name: str = _DUCKDB_INSTANCE_NAME,
+    #     table_name: str = _DUCKDB_TABLE_NAME,
+    # ) -> None:
+
+    #     cursor = duckdb.connect(duckdb_instance_name)
+
+    #     # setting up DuckDB to store vectors
+    #     cursor.execute("INSTALL vss;")
+    #     cursor.execute("LOAD vss;")
+    #     cursor.execute("SET hnsw_enable_experimental_persistence = true;")
+
+    #     table_name = "embeddings_table"
+        
+    #     cursor.execute(
+    #         f"""
+    #         -- Create an HNSW index on the embedding vector
+    #         CREATE INDEX my_hnsw_index ON {table_name} USING HNSW (vec);
+    #         """
+    #     )
+    #     cursor.close()
 
     @task
     def insert_words_into_db(
@@ -227,13 +222,26 @@ def example_vector_embeddings_test():  # by default the dag_id is the name of th
 
         cursor.close()
 
-    data_quality_check_2 = SQLTableCheckOperator(
-        task_id="data_quality_check_2",
+    data_quality_check_1 = SQLTableCheckOperator(
+        task_id="data_quality_check_1",
         conn_id="duckdb_default",
         table=_DUCKDB_TABLE_NAME,
         checks={
             "row_count_check": {"check_statement": "COUNT(*) >= 5"},
         },
+    )
+
+    data_quality_check_2 = SQLColumnCheckOperator(
+        task_id="data_quality_check_2",
+        table=_DUCKDB_TABLE_NAME,
+        column_mapping={
+            "text": {
+                "unique_check": {
+                    "equal_to": 0
+                }
+            },
+        },
+        conn_id="duckdb_default",
     )
 
     @task
@@ -302,12 +310,11 @@ def example_vector_embeddings_test():  # by default the dag_id is the name of th
     # See: https://www.astronomer.io/docs/learn/managing-dependencies
     chain(
         create_vector_table(),
-        data_quality_check_1,
-        modify_vector_table(),
         insert_words_into_db(list_of_words_and_embeddings=create_embeddings_obj),
+        data_quality_check_1,
         data_quality_check_2,
         find_closest_word_match(word_of_interest_embedding=embed_word_obj),
     )
 
 
-example_vector_embeddings_test()
+example_vector_embeddings_solution()

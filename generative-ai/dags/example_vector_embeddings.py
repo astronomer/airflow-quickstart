@@ -174,6 +174,11 @@ def example_vector_embeddings():  # by default the dag_id is the name of the dec
 
         cursor = duckdb.connect(duckdb_instance_name)
 
+        # setting up DuckDB to store vectors
+        cursor.execute("INSTALL vss;")
+        cursor.execute("LOAD vss;")
+        cursor.execute("SET hnsw_enable_experimental_persistence = true;")
+
         table_name = "embeddings_table"
 
         cursor.execute(
@@ -184,29 +189,14 @@ def example_vector_embeddings():  # by default the dag_id is the name of the dec
             );
             """
         )
-        cursor.close()
 
-    @task
-    def modify_vector_table(
-        duckdb_instance_name: str = _DUCKDB_INSTANCE_NAME,
-        table_name: str = _DUCKDB_TABLE_NAME,
-    ) -> None:
-
-        cursor = duckdb.connect(duckdb_instance_name)
-
-        # setting up DuckDB to store vectors
-        cursor.execute("INSTALL vss;")
-        cursor.execute("LOAD vss;")
-        cursor.execute("SET hnsw_enable_experimental_persistence = true;")
-
-        table_name = "embeddings_table"
-        
         cursor.execute(
             f"""
             -- Create an HNSW index on the embedding vector
             CREATE INDEX my_hnsw_index ON {table_name} USING HNSW (vec);
             """
         )
+
         cursor.close()
 
     @task
@@ -305,7 +295,6 @@ def example_vector_embeddings():  # by default the dag_id is the name of the dec
     # See: https://www.astronomer.io/docs/learn/managing-dependencies
     chain(
         create_vector_table(),
-        modify_vector_table(),
         insert_words_into_db(list_of_words_and_embeddings=create_embeddings_obj),
         find_closest_word_match(word_of_interest_embedding=embed_word_obj),
     )
