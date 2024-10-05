@@ -20,7 +20,7 @@ import os
 
 # DuckDB connection for data quality checks (local development)
 conn = Connection(
-    conn_id="duckdb_default",
+    conn_id="duckdb_conn",
     conn_type="duckdb",
     host="include/astronomy.db"
     )

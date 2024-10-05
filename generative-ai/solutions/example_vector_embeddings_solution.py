@@ -21,7 +21,7 @@ from airflow.models.connection import Connection
 
 # DuckDB connection for local development
 conn = Connection(
-    conn_id="duckdb_default",
+    conn_id="duckdb_conn",
     conn_type="duckdb",
     host="include/astronomy.db"
     )
@@ -212,7 +212,7 @@ def example_vector_embeddings_solution():  # by default the dag_id is the name o
 
     data_quality_check_1 = SQLTableCheckOperator(
         task_id="data_quality_check_1",
-        conn_id="duckdb_default",
+        conn_id="duckdb_conn",
         table=_DUCKDB_TABLE_NAME,
         checks={
             "row_count_check": {"check_statement": "COUNT(*) >= 5"},
@@ -229,7 +229,7 @@ def example_vector_embeddings_solution():  # by default the dag_id is the name o
                 }
             },
         },
-        conn_id="duckdb_default",
+        conn_id="duckdb_conn",
     )
 
     @task
