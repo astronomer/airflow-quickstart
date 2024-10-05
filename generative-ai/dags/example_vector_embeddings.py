@@ -28,6 +28,9 @@ env_key = f"AIRFLOW_CONN_{conn.conn_id.upper()}"
 conn_uri = conn.get_uri()
 os.environ[env_key] = conn_uri
 
+# Imports needed for data quality checks
+from airflow.providers.common.sql.operators.sql import SQLColumnCheckOperator, SQLTableCheckOperator
+
 # ------------------------------- #
 # Exercise 1: Modularize this DAG #
 # ------------------------------- #
@@ -239,6 +242,21 @@ def example_vector_embeddings():  # by default the dag_id is the name of the dec
             )
 
         cursor.close()
+
+    # ----------------------------------- #
+    # Exercise 3: Add data quality checks #
+    # ----------------------------------- #
+    # Follow best practices and add data quality checks 
+    # to ensure that the row count and uniqueness of the 
+    # data in the table are consistent with expectations. 
+    # Astronomer recommends using operators available from 
+    # the Airflow SQL provider to implement data quality checks 
+    # for most use cases, but Airflow also supports tools such 
+    # as Great Expectations and Soda. Add tasks using the 
+    # `SQLColumnCheckOperator` and `SQLTableCheckOperator` 
+    # to perform row count and uniqueness checks, respectively.
+    # Don't forget to add the tasks to the chain function
+    # below. The operators have already been imported for you.
 
     @task
     def embed_word(**context):
