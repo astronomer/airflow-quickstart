@@ -12,6 +12,7 @@ from airflow.decorators import (
 )  # This DAG uses the TaskFlow API. See: https://www.astronomer.io/docs/learn/airflow-decorators
 from airflow.models.baseoperator import chain
 from airflow.models.param import Param
+from airflow.models.connection import Connection
 from pendulum import datetime, duration
 from tabulate import tabulate
 import duckdb
