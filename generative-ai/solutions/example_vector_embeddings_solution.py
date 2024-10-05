@@ -17,6 +17,17 @@ from tabulate import tabulate
 import duckdb
 import logging
 import os
+from airflow.models.connection import Connection
+
+# DuckDB connection for local development
+conn = Connection(
+    conn_id="duckdb_default",
+    conn_type="duckdb",
+    host="include/astronomy.db"
+    )
+env_key = f"AIRFLOW_CONN_{conn.conn_id.upper()}"
+conn_uri = conn.get_uri()
+os.environ[env_key] = conn_uri
 
 # Imports needed for data quality checks
 from airflow.providers.common.sql.operators.sql import SQLColumnCheckOperator, SQLTableCheckOperator
@@ -168,29 +179,6 @@ def example_vector_embeddings_solution():  # by default the dag_id is the name o
         )
 
         cursor.close()
-
-    # @task
-    # def modify_vector_table(
-    #     duckdb_instance_name: str = _DUCKDB_INSTANCE_NAME,
-    #     table_name: str = _DUCKDB_TABLE_NAME,
-    # ) -> None:
-
-    #     cursor = duckdb.connect(duckdb_instance_name)
-
-    #     # setting up DuckDB to store vectors
-    #     cursor.execute("INSTALL vss;")
-    #     cursor.execute("LOAD vss;")
-    #     cursor.execute("SET hnsw_enable_experimental_persistence = true;")
-
-    #     table_name = "embeddings_table"
-        
-    #     cursor.execute(
-    #         f"""
-    #         -- Create an HNSW index on the embedding vector
-    #         CREATE INDEX my_hnsw_index ON {table_name} USING HNSW (vec);
-    #         """
-    #     )
-    #     cursor.close()
 
     @task
     def insert_words_into_db(

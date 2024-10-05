@@ -17,6 +17,16 @@ from tabulate import tabulate
 import duckdb
 import os
 
+# DuckDB connection for data quality checks (local development)
+conn = Connection(
+    conn_id="duckdb_default",
+    conn_type="duckdb",
+    host="include/astronomy.db"
+    )
+env_key = f"AIRFLOW_CONN_{conn.conn_id.upper()}"
+conn_uri = conn.get_uri()
+os.environ[env_key] = conn_uri
+
 # ------------------------------- #
 # Exercise 1: Modularize this DAG #
 # ------------------------------- #
