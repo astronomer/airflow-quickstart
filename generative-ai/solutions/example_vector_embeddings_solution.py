@@ -210,6 +210,22 @@ def example_vector_embeddings_solution():  # by default the dag_id is the name o
 
         cursor.close()
 
+    @task
+    def check(
+        duckdb_instance_name: str = _DUCKDB_INSTANCE_NAME,
+        table_name: str = _DUCKDB_TABLE_NAME,
+    ) -> None:
+        cursor = duckdb.connect(duckdb_instance_name)
+        # cursor.execute("LOAD vss;")
+        cursor.execute(
+            """
+            SELECT *
+            FROM information_schema.columns;
+            """
+            )
+        print(cursor.fetchall())
+        cursor.close()
+
     data_quality_check_1 = SQLTableCheckOperator(
         task_id="data_quality_check_1",
         conn_id="duckdb_conn",
@@ -217,10 +233,12 @@ def example_vector_embeddings_solution():  # by default the dag_id is the name o
         checks={
             "row_count_check": {"check_statement": "COUNT(*) >= 5"},
         },
+        retries=0,
     )
 
     data_quality_check_2 = SQLColumnCheckOperator(
         task_id="data_quality_check_2",
+        conn_id="duckdb_conn",
         table=_DUCKDB_TABLE_NAME,
         column_mapping={
             "text": {
@@ -229,7 +247,7 @@ def example_vector_embeddings_solution():  # by default the dag_id is the name o
                 }
             },
         },
-        conn_id="duckdb_conn",
+        retries=0,
     )
 
     @task
@@ -299,6 +317,7 @@ def example_vector_embeddings_solution():  # by default the dag_id is the name o
     chain(
         create_vector_table(),
         insert_words_into_db(list_of_words_and_embeddings=create_embeddings_obj),
+        check(),
         data_quality_check_1,
         data_quality_check_2,
         find_closest_word_match(word_of_interest_embedding=embed_word_obj),
