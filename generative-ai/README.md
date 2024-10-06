@@ -17,7 +17,7 @@ Your Astro project contains the following files and folders:
 
 - dags: This folder contains the Python files for your Airflow DAGs. By default, this directory includes one example DAG:
   - `example_vector_embeddings.py`: This DAG demonstrates how to compute vector embeddings of words using the SentenceTransformers library and
-    compare the embeddings of a word of interest to a list of words to find the semantically closest match.get-started-with-airflow).
+    compare the embeddings of a word of interest to a list of words to find the semantically closest match.
 - Dockerfile: This file contains a versioned Astro Runtime Docker image that provides a differentiated Airflow experience. If you want to execute other commands or overrides at runtime, specify them here.
 - include: This folder contains any additional files that you want to include as part of your project. It is empty by default.
 - packages.txt: Install OS-level packages needed for your project by adding them to this file. It is empty by default.
@@ -29,9 +29,13 @@ Your Astro project contains the following files and folders:
 
 ## Exercise 1
 
-- Modularize the DAG. See the `example_vector_embeddings` DAG file for detailed instructions.
+- Add data quality checks. See the `example_vector_embeddings` DAG file for detailed instructions.
 
 ## Exercise 2
+
+- Modularize the DAG. See the DAG file for details.
+
+## Exercise 3
 
 - Add logging. See the DAG file for details.
 
