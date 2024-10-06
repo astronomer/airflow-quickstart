@@ -231,7 +231,7 @@ def example_vector_embeddings_solution():  # by default the dag_id is the name o
         conn_id="duckdb_conn",
         table=_DUCKDB_TABLE_NAME,
         checks={
-            "row_count_check": {"check_statement": "COUNT(*) >= 5"},
+            "row_count_check": {"check_statement": "COUNT(*) >= 5 AND COUNT(*) <= 10"},
         },
         retries=0,
     )
