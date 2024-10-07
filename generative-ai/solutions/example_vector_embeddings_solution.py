@@ -50,7 +50,7 @@ _LIST_OF_WORDS_PARAMETER_NAME = os.getenv(
     "LIST_OF_WORDS_PARAMETER_NAME", "my_list_of_words"
 )
 _LIST_OF_WORDS_DEFAULT = ["sun", "rocket", "planet", "light", "happiness"]
-SODA_PATH="/Users/michael/Projects/astro-airflow-quickstart/airflow-quickstart/generative-ai/include"
+_LM_DIMENSIONS = os.getenv("LM_DIMS", "384")
 
 # -------------- #
 # DAG Definition #
@@ -143,6 +143,7 @@ def example_vector_embeddings_solution():  # by default the dag_id is the name o
 
     @task
     def create_vector_table(
+        lm_dims: str = _LM_DIMENSIONS,
         duckdb_instance_name: str = _DUCKDB_INSTANCE_NAME,
         table_name: str = _DUCKDB_TABLE_NAME,
     ) -> None:
@@ -166,7 +167,7 @@ def example_vector_embeddings_solution():  # by default the dag_id is the name o
             f"""
             CREATE OR REPLACE TABLE {table_name} (
                 text STRING,
-                vec FLOAT[384]
+                vec FLOAT[{lm_dims}]
             );
             """
         )
@@ -267,6 +268,7 @@ def example_vector_embeddings_solution():  # by default the dag_id is the name o
 
     @task
     def find_closest_word_match(
+        lm_dims: str = _LM_DIMENSIONS,
         duckdb_instance_name: str = _DUCKDB_INSTANCE_NAME,
         table_name: str = _DUCKDB_TABLE_NAME,
         word_of_interest_embedding: dict = None,
@@ -290,7 +292,7 @@ def example_vector_embeddings_solution():  # by default the dag_id is the name o
         top_3 = cursor.execute(
             f"""
             SELECT text FROM {table_name}
-            ORDER BY array_distance(vec, {vec}::FLOAT[384])
+            ORDER BY array_distance(vec, {vec}::FLOAT[{lm_dims}])
             LIMIT 3;
             """
         )

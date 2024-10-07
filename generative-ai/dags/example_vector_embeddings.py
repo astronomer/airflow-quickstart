@@ -31,29 +31,9 @@ os.environ[env_key] = conn_uri
 # Imports needed for data quality checks
 from airflow.providers.common.sql.operators.sql import SQLColumnCheckOperator, SQLTableCheckOperator
 
-# ------------------------------- #
-# Exercise 1: Modularize this DAG #
-# ------------------------------- #
-# Keeping code that isn't part of your DAG or operator instantiations
-# in a separate file makes your DAG easier to read, maintain, and update.
-# Follow best practices and modularize this DAG by converting 
-# `get_embeddings_one_word` from top-level code to an imported module.
-# Hint: all you need to do in this case is replace the top-level function 
-# with an import statement.
-# For more guidance, see: 
-# https://www.astronomer.io/docs/learn/dag-best-practices#treat-your-dag-file-like-a-config-file
 
-# ----------------------- #
-# Exercise 2: Add logging #
-# ----------------------- #
-# Add an Airflow task logger to log information to the task logs using 
-# the default logger for tasks. Use `t_log` as a top-level variable for 
-# instantiating an `airflow.task` logger object and uncomment the logging 
-# statements in the `find_closest_word_match` task.
-# Hint 1: don't forget to import the Python logging framework!
-# Hint 2: for more info about setting up logging and example code, see: 
-# https://www.astronomer.io/docs/learn/logging#add-custom-task-logs-from-a-dag
-# Use the Airflow task logger to log information to the task logs (or use print()).
+
+
 
 # Define variables used in a DAG as environment variables in .env for your whole Airflow instance
 # to standardize your DAGs.
@@ -68,6 +48,27 @@ _LIST_OF_WORDS_PARAMETER_NAME = os.getenv(
 )
 _LIST_OF_WORDS_DEFAULT = ["sun", "rocket", "planet", "light", "happiness"]
 
+# ------------------------------------------- #
+# Exercise 1: Experiment with alternative LMs #
+# ------------------------------------------- #
+# In include/embedding_func.py, pass alternative LMs to the `SentenceTransformer`
+# function. For possible LMs, see: https://sbert.net/docs/sentence_transformer/pretrained_models.html.
+# Here, you must also define the dimensions of the LM for the `vec` column of the database.
+# It must correspond to the LM passed to `SentenceTransformer` in include/embedding_func.py.
+# The default of 384 corresponds to "all-MiniLM-L6-v2".
+_LM_DIMENSIONS = os.getenv("LM_DIMS", "384")
+
+# ------------------------------- #
+# Exercise 3: Modularize this DAG #
+# ------------------------------- #
+# Keeping code that isn't part of your DAG or operator instantiations
+# in a separate file makes your DAG easier to read, maintain, and update.
+# Follow best practices and modularize this DAG by converting 
+# `get_embeddings_one_word` from top-level code to an imported module.
+# Hint: all you need to do in this case is replace the top-level function 
+# with an import statement.
+# For more guidance, see: 
+# https://www.astronomer.io/docs/learn/dag-best-practices#treat-your-dag-file-like-a-config-file
 def get_embeddings_one_word(word):
     """
     Embeds a single word using the SentenceTransformers library.
@@ -176,6 +177,7 @@ def example_vector_embeddings():  # by default the dag_id is the name of the dec
 
     @task
     def create_vector_table(
+        lm_dims: str = _LM_DIMENSIONS,
         duckdb_instance_name: str = _DUCKDB_INSTANCE_NAME,
         table_name: str = _DUCKDB_TABLE_NAME,
     ) -> None:
@@ -194,12 +196,12 @@ def example_vector_embeddings():  # by default the dag_id is the name of the dec
         cursor.execute("SET hnsw_enable_experimental_persistence = true;")
 
         table_name = "embeddings_table"
-
+        
         cursor.execute(
             f"""
             CREATE OR REPLACE TABLE {table_name} (
                 text STRING,
-                vec FLOAT[384]
+                vec FLOAT[{lm_dims}]
             );
             """
         )
@@ -244,7 +246,7 @@ def example_vector_embeddings():  # by default the dag_id is the name of the dec
         cursor.close()
 
     # ----------------------------------- #
-    # Exercise 3: Add data quality checks #
+    # Exercise 2: Add data quality checks #
     # ----------------------------------- #
     # Follow best practices and add data quality checks 
     # to ensure that the row count and uniqueness of the 
@@ -275,6 +277,7 @@ def example_vector_embeddings():  # by default the dag_id is the name of the dec
 
     @task
     def find_closest_word_match(
+        lm_dims: str = _LM_DIMENSIONS,
         duckdb_instance_name: str = _DUCKDB_INSTANCE_NAME,
         table_name: str = _DUCKDB_TABLE_NAME,
         word_of_interest_embedding: dict = None,
@@ -298,13 +301,24 @@ def example_vector_embeddings():  # by default the dag_id is the name of the dec
         top_3 = cursor.execute(
             f"""
             SELECT text FROM {table_name}
-            ORDER BY array_distance(vec, {vec}::FLOAT[384])
+            ORDER BY array_distance(vec, {vec}::FLOAT[{lm_dims}])
             LIMIT 3;
             """
         )
 
         top_3 = top_3.fetchall()
 
+        # ----------------------- #
+        # Exercise 4: Add logging #
+        # ----------------------- #
+        # Add an Airflow task logger to log information to the task logs using 
+        # the default logger for tasks. Use `t_log` as a top-level variable for 
+        # instantiating an `airflow.task` logger object and uncomment the logging 
+        # statements in the `find_closest_word_match` task.
+        # Hint 1: don't forget to import the Python logging framework!
+        # Hint 2: for more info about setting up logging and example code, see: 
+        # https://www.astronomer.io/docs/learn/logging#add-custom-task-logs-from-a-dag
+        # Use the Airflow task logger to log information to the task logs (or use print()).
         # t_log.info(f"Top 3 closest words to '{word}':")
         # t_log.info(tabulate(top_3, headers=["Word"], tablefmt="pretty"))
 

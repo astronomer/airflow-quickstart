@@ -29,13 +29,17 @@ Your Astro project contains the following files and folders:
 
 ## Exercise 1
 
-- Add data quality checks. See the `example_vector_embeddings` DAG file for detailed instructions.
+- Experiment with alternative LMs. See the `example_vector_embeddings` DAG file for detailed instructions.
 
 ## Exercise 2
 
-- Modularize the DAG. See the DAG file for details.
+- Add data quality checks. See the DAG file for details.
 
 ## Exercise 3
+
+- Modularize the DAG. See the DAG file for details.
+
+## Exercise 4
 
 - Add logging. See the DAG file for details.
 
