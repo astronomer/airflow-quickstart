@@ -18,6 +18,9 @@ from tabulate import tabulate
 import duckdb
 import os
 
+# modularize code by importing functions from the include folder
+from include.custom_functions.embedding_func import get_embeddings_one_word
+
 # DuckDB connection for data quality checks (local development)
 conn = Connection(
     conn_id="duckdb_conn",
@@ -28,12 +31,8 @@ env_key = f"AIRFLOW_CONN_{conn.conn_id.upper()}"
 conn_uri = conn.get_uri()
 os.environ[env_key] = conn_uri
 
-# Imports needed for data quality checks
-from airflow.providers.common.sql.operators.sql import SQLColumnCheckOperator, SQLTableCheckOperator
-
-
-
-
+# use the Airflow task logger to log information to the task logs (or use print())
+t_log = logging.getLogger("airflow.task")
 
 # Define variables used in a DAG as environment variables in .env for your whole Airflow instance
 # to standardize your DAGs.
@@ -48,43 +47,18 @@ _LIST_OF_WORDS_PARAMETER_NAME = os.getenv(
 )
 _LIST_OF_WORDS_DEFAULT = ["sun", "rocket", "planet", "light", "happiness"]
 
-# ------------------------------------------- #
-# Exercise 1: Experiment with alternative LMs #
-# ------------------------------------------- #
-# In include/embedding_func.py, pass alternative LMs to the `SentenceTransformer`
-# function. For possible LMs, see: https://sbert.net/docs/sentence_transformer/pretrained_models.html.
-# Here, you must also define the dimensions of the LM for the `vec` column of the database.
-# It must correspond to the LM passed to `SentenceTransformer` in include/embedding_func.py.
-# The default of 384 corresponds to "all-MiniLM-L6-v2".
+# ----------------------------------------- #
+# Exercise: Experiment with alternative LMs #
+# ----------------------------------------- #
+# For possible LMs, see: 
+# https://sbert.net/docs/sentence_transformer/pretrained_models.html.
+# Replace the string in the `_LM` variable definition include/embedding_func.py
+#  to change the model. You must also define the `_LM_DIMENSIONS` variable 
+# below using the dimensions of the LM. The default of 384 corresponds 
+# to "all-MiniLM-L6-v2".
+# _LM_DIMENSIONS = os.getenv("LM_DIMS", "768")
 _LM_DIMENSIONS = os.getenv("LM_DIMS", "384")
 
-# ------------------------------- #
-# Exercise 3: Modularize this DAG #
-# ------------------------------- #
-# Keeping code that isn't part of your DAG or operator instantiations
-# in a separate file makes your DAG easier to read, maintain, and update.
-# Follow best practices and modularize this DAG by converting 
-# `get_embeddings_one_word` from top-level code to an imported module.
-# Hint: all you need to do in this case is replace the top-level function 
-# with an import statement.
-# For more guidance, see: 
-# https://www.astronomer.io/docs/learn/dag-best-practices#treat-your-dag-file-like-a-config-file
-def get_embeddings_one_word(word):
-    """
-    Embeds a single word using the SentenceTransformers library.
-    Args:
-        word (str): The word to embed.
-    Returns:
-        dict: A dictionary with the word as key and the embeddings as value.
-    """
-    from sentence_transformers import SentenceTransformer
-
-    model = SentenceTransformer("all-MiniLM-L6-v2")
-
-    embeddings = model.encode(word)
-    embeddings = embeddings.tolist()
-
-    return {word: embeddings}
 
 # -------------- #
 # DAG Definition #
@@ -245,21 +219,6 @@ def example_vector_embeddings():  # by default the dag_id is the name of the dec
 
         cursor.close()
 
-    # ----------------------------------- #
-    # Exercise 2: Add data quality checks #
-    # ----------------------------------- #
-    # Follow best practices and add data quality checks 
-    # to ensure that the row count and uniqueness of the 
-    # data in the table are consistent with expectations. 
-    # Astronomer recommends using operators available from 
-    # the Airflow SQL provider to implement data quality checks 
-    # for most use cases, but Airflow also supports tools such 
-    # as Great Expectations and Soda. Add tasks using the 
-    # `SQLColumnCheckOperator` and `SQLTableCheckOperator` 
-    # to perform row count and uniqueness checks, respectively.
-    # Don't forget to add the tasks to the chain function
-    # below. The operators have already been imported for you.
-
     @task
     def embed_word(**context):
         """
@@ -268,6 +227,7 @@ def example_vector_embeddings():  # by default the dag_id is the name of the dec
             dict: A dictionary with the word as key and the embeddings as value.
         """
 
+        model = _LM
         my_word_of_interest = context["params"][_WORD_OF_INTEREST_PARAMETER_NAME]
         embeddings = get_embeddings_one_word(my_word_of_interest)
 
@@ -308,19 +268,8 @@ def example_vector_embeddings():  # by default the dag_id is the name of the dec
 
         top_3 = top_3.fetchall()
 
-        # ----------------------- #
-        # Exercise 4: Add logging #
-        # ----------------------- #
-        # Add an Airflow task logger to log information to the task logs using 
-        # the default logger for tasks. Use `t_log` as a top-level variable for 
-        # instantiating an `airflow.task` logger object and uncomment the logging 
-        # statements in the `find_closest_word_match` task.
-        # Hint 1: don't forget to import the Python logging framework!
-        # Hint 2: for more info about setting up logging and example code, see: 
-        # https://www.astronomer.io/docs/learn/logging#add-custom-task-logs-from-a-dag
-        # Use the Airflow task logger to log information to the task logs (or use print()).
-        # t_log.info(f"Top 3 closest words to '{word}':")
-        # t_log.info(tabulate(top_3, headers=["Word"], tablefmt="pretty"))
+        t_log.info(f"Top 3 closest words to '{word}':")
+        t_log.info(tabulate(top_3, headers=["Word"], tablefmt="pretty"))
 
         return top_3
 
