@@ -1,0 +1,10 @@
+version: "3.1"
+services:
+  example-db:
+    image: postgres:14.9
+    ports:
+      - "5435:5432"
+    environment:
+      - POSTGRES_USER=example
+      - POSTGRES_PASSWORD=example
+      - POSTGRES_DB=example

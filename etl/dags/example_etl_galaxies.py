@@ -20,6 +20,9 @@ import pandas as pd
 import duckdb
 import logging
 import os
+from airflow.providers.postgres.operators.postgres import PostgresOperator
+# from airflow.providers.postgres.hooks.postgres import PostgresHook
+from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 
 # Modularize code by importing functions from the include folder.
 from include.custom_functions.galaxy_functions import get_galaxy_data
@@ -216,6 +219,27 @@ def example_etl_galaxies():  # By default, the dag_id is the name of the decorat
         )
         t_log.info(tabulate(near_galaxies_df, headers="keys", tablefmt="pretty"))
 
+    # @task(retries=0)
+    # def load_galaxy_data_postgres(
+    #     filtered_galaxy_df: pd.DataFrame,
+    #     table_name: str = _DUCKDB_TABLE_NAME,
+    # ):
+    #     conn = sql.get_connection("postgres_default")
+    #     cursor = conn.cursor()
+    #     cursor.execute(
+    #         f"""
+    #         CREATE TABLE IF NOT EXISTS {table_name} (
+    #             name STRING PRIMARY KEY,
+    #             distance_from_milkyway INT,
+    #             distance_from_solarsystem INT,
+    #             type_of_galaxy STRING,
+    #             characteristics STRING
+    #         );
+    #         INSERT INTO {table_name} (SELECT * FROM {transform_galaxy_data_obj});
+    #         """
+    #         )
+        # cursor.insert_rows(table_name, filtered_galaxy_df)
+
     # ------------- #
     # Calling tasks #
     # ------------- #
@@ -227,7 +251,35 @@ def example_etl_galaxies():  # By default, the dag_id is the name of the decorat
     extract_galaxy_data_obj = extract_galaxy_data()
     transform_galaxy_data_obj = transform_galaxy_data(extract_galaxy_data_obj)
     load_galaxy_data_obj = load_galaxy_data(transform_galaxy_data_obj)
+    
+    @task
+    def create_sql_query(df):
+        sql_texts = []
+        for index, row in df.iterrows():       
+            sql_texts.append(f'INSERT INTO {_DUCKDB_TABLE_NAME} ('+ str(', '.join(df.columns))+ ') VALUES '+ str(tuple(row.values)))        
+        return sql_texts
 
+    create_galaxy_data_postgres = SQLExecuteQueryOperator(
+        task_id="create_galaxy_data_postgres",
+        conn_id="postgres_default",
+        sql=f"""
+            CREATE TABLE IF NOT EXISTS {_DUCKDB_TABLE_NAME} (
+                name VARCHAR PRIMARY KEY,
+                distance_from_milkyway INT,
+                distance_from_solarsystem INT,
+                type_of_galaxy VARCHAR,
+                characteristics VARCHAR
+            );
+            """,
+        retries=0,
+        )
+
+    load_postgres = SQLExecuteQueryOperator(
+        task_id = "load_galaxy_data_postgres",
+        conn_id = "postgres_default",
+        sql = create_sql_query(transform_galaxy_data_obj),
+        retries=0,
+    )
 
     # --------------------------------------------------- #
     # Exercise 2: Set dependencies using a chain function #
@@ -236,7 +288,7 @@ def example_etl_galaxies():  # By default, the dag_id is the name of the decorat
     # Replace the bit-shift approach taken here with a chain function.
     # For more guidance, see: https://www.astronomer.io/docs/learn/managing-dependencies
 
-    create_galaxy_table_in_duckdb_obj >> load_galaxy_data_obj >> print_loaded_galaxies()
+    create_galaxy_table_in_duckdb_obj >> load_galaxy_data_obj >> print_loaded_galaxies() >> create_galaxy_data_postgres >> load_postgres
 
 
 # Instantiate the DAG
