@@ -219,27 +219,6 @@ def example_etl_galaxies():  # By default, the dag_id is the name of the decorat
         )
         t_log.info(tabulate(near_galaxies_df, headers="keys", tablefmt="pretty"))
 
-    # @task(retries=0)
-    # def load_galaxy_data_postgres(
-    #     filtered_galaxy_df: pd.DataFrame,
-    #     table_name: str = _DUCKDB_TABLE_NAME,
-    # ):
-    #     conn = sql.get_connection("postgres_default")
-    #     cursor = conn.cursor()
-    #     cursor.execute(
-    #         f"""
-    #         CREATE TABLE IF NOT EXISTS {table_name} (
-    #             name STRING PRIMARY KEY,
-    #             distance_from_milkyway INT,
-    #             distance_from_solarsystem INT,
-    #             type_of_galaxy STRING,
-    #             characteristics STRING
-    #         );
-    #         INSERT INTO {table_name} (SELECT * FROM {transform_galaxy_data_obj});
-    #         """
-    #         )
-        # cursor.insert_rows(table_name, filtered_galaxy_df)
-
     # ------------- #
     # Calling tasks #
     # ------------- #
@@ -274,13 +253,6 @@ def example_etl_galaxies():  # By default, the dag_id is the name of the decorat
         retries=0,
         )
 
-    load_postgres = SQLExecuteQueryOperator(
-        task_id = "load_galaxy_data_postgres",
-        conn_id = "postgres_default",
-        sql = create_sql_query(transform_galaxy_data_obj),
-        retries=0,
-    )
-
     # --------------------------------------------------- #
     # Exercise 2: Set dependencies using a chain function #
     # --------------------------------------------------- #
@@ -288,7 +260,7 @@ def example_etl_galaxies():  # By default, the dag_id is the name of the decorat
     # Replace the bit-shift approach taken here with a chain function.
     # For more guidance, see: https://www.astronomer.io/docs/learn/managing-dependencies
 
-    create_galaxy_table_in_duckdb_obj >> load_galaxy_data_obj >> print_loaded_galaxies() >> create_galaxy_data_postgres >> load_postgres
+    create_galaxy_table_in_duckdb_obj >> load_galaxy_data_obj >> print_loaded_galaxies()
 
 
 # Instantiate the DAG
