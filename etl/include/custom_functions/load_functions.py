@@ -1,4 +1,4 @@
-def create_sql_query(df, table_name):
+def get_sql_query(df, table_name):
     sql_text = []
     for index, row in df.iterrows():       
         sql_text.append(

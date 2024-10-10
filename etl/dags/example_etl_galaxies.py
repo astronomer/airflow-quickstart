@@ -230,28 +230,6 @@ def example_etl_galaxies():  # By default, the dag_id is the name of the decorat
     extract_galaxy_data_obj = extract_galaxy_data()
     transform_galaxy_data_obj = transform_galaxy_data(extract_galaxy_data_obj)
     load_galaxy_data_obj = load_galaxy_data(transform_galaxy_data_obj)
-    
-    @task
-    def create_sql_query(df):
-        sql_texts = []
-        for index, row in df.iterrows():       
-            sql_texts.append(f'INSERT INTO {_DUCKDB_TABLE_NAME} ('+ str(', '.join(df.columns))+ ') VALUES '+ str(tuple(row.values)))        
-        return sql_texts
-
-    create_galaxy_data_postgres = SQLExecuteQueryOperator(
-        task_id="create_galaxy_data_postgres",
-        conn_id="postgres_default",
-        sql=f"""
-            CREATE TABLE IF NOT EXISTS {_DUCKDB_TABLE_NAME} (
-                name VARCHAR PRIMARY KEY,
-                distance_from_milkyway INT,
-                distance_from_solarsystem INT,
-                type_of_galaxy VARCHAR,
-                characteristics VARCHAR
-            );
-            """,
-        retries=0,
-        )
 
     # --------------------------------------------------- #
     # Exercise 2: Set dependencies using a chain function #
