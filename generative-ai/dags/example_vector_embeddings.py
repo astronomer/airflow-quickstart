@@ -47,6 +47,7 @@ _LIST_OF_WORDS_PARAMETER_NAME = os.getenv(
     "LIST_OF_WORDS_PARAMETER_NAME", "my_list_of_words"
 )
 _LIST_OF_WORDS_DEFAULT = ["sun", "rocket", "planet", "light", "happiness"]
+_LM = os.getenv("LM", "all-MiniLM-L6-v2")
 
 # ----------------------------------------- #
 # Exercise: Experiment with alternative LMs #
@@ -141,10 +142,11 @@ def example_vector_embeddings():  # by default the dag_id is the name of the dec
         """
 
         list_of_words_and_embeddings = []
+        lm = _LM
 
         for word in list_of_words:
             word_and_embeddings = get_embeddings_one_word(
-                word
+                lm, word
             )  # using the modularized function in the include folder
             list_of_words_and_embeddings.append(word_and_embeddings)
 
@@ -228,9 +230,9 @@ def example_vector_embeddings():  # by default the dag_id is the name of the dec
             dict: A dictionary with the word as key and the embeddings as value.
         """
 
-        model = _LM
+        lm = _LM
         my_word_of_interest = context["params"][_WORD_OF_INTEREST_PARAMETER_NAME]
-        embeddings = get_embeddings_one_word(my_word_of_interest)
+        embeddings = get_embeddings_one_word(lm, my_word_of_interest)
 
         embeddings = embeddings[my_word_of_interest]
 
