@@ -1,5 +1,6 @@
+import os
+
 _LM = os.getenv("LM", "all-MiniLM-L6-v2")
-# _LM = os.getenv("LM", "all-mpnet-base-v2")
 
 def get_embeddings_one_word(lm, word):
     """

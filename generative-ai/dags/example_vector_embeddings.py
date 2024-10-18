@@ -17,6 +17,7 @@ from pendulum import datetime, duration
 from tabulate import tabulate
 import duckdb
 import os
+import logging
 
 # modularize code by importing functions from the include folder
 from include.custom_functions.embedding_func import get_embeddings_one_word
